@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.data.model.dto.SpaceEvent
+import com.example.android_development_practices.domain.model.SpaceEvent
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.InfoChip
@@ -78,7 +78,7 @@ private fun EventDetailContent(event: SpaceEvent) {
 
         DetailHero(
             emoji = "📡",
-            imageUrl = event.image?.image_url,
+            imageUrl = event.imageUrl,
             modifier = Modifier.constrainAs(hero) {
                 top.linkTo(parent.top)
                 centerHorizontallyTo(parent)
@@ -97,7 +97,7 @@ private fun EventDetailContent(event: SpaceEvent) {
             },
         )
 
-        event.type?.name?.let { type ->
+        event.typeName?.let { type ->
             InfoChip(
                 text = type,
                 modifier = Modifier.constrainAs(typeChip) {
@@ -112,7 +112,7 @@ private fun EventDetailContent(event: SpaceEvent) {
             modifier = Modifier
                 .height(IntrinsicSize.Max)
                 .constrainAs(statRow) {
-                    top.linkTo(if (event.type != null) typeChip.bottom else title.bottom, margin = 16.dp)
+                    top.linkTo(if (event.typeName != null) typeChip.bottom else title.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                     width = Dimension.fillToConstraints
@@ -125,8 +125,8 @@ private fun EventDetailContent(event: SpaceEvent) {
             )
             StatBox(
                 value = when {
-                    event.webcast_live == true -> "В эфире"
-                    event.vid_urls.isNotEmpty() -> "Запись"
+                    event.webcastLive == true -> "В эфире"
+                    event.videoUrl != null -> "Запись"
                     else -> "—"
                 },
                 label = "Трансляция",
@@ -134,7 +134,7 @@ private fun EventDetailContent(event: SpaceEvent) {
             )
         }
 
-        val webcast = event.vid_urls.firstOrNull { !it.url.isNullOrBlank() }
+        val webcast = event.videoUrl
         if (webcast != null) {
             val uriHandler = LocalUriHandler.current
             Text(
@@ -146,7 +146,7 @@ private fun EventDetailContent(event: SpaceEvent) {
                         top.linkTo(statRow.bottom, margin = 12.dp)
                         start.linkTo(parent.start)
                     }
-                    .clickable { webcast.url?.let { uriHandler.openUri(it) } },
+                    .clickable { uriHandler.openUri(webcast) },
             )
         }
 
@@ -192,11 +192,11 @@ private fun EventDetailContent(event: SpaceEvent) {
             },
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                DetailField(label = "Тип", value = event.type?.name ?: "—")
+                DetailField(label = "Тип", value = event.typeName ?: "—")
                 DetailField(label = "Дата", value = formatIsoDate(event.date))
                 DetailField(label = "Место", value = event.location ?: "—")
                 DetailField(label = "Продолжительность", value = formatIsoDuration(event.duration))
-                DetailField(label = "Связанных запусков", value = event.launches.size.toString())
+                DetailField(label = "Связанных запусков", value = event.launchCount.toString())
             }
         }
     }

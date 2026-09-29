@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
@@ -77,21 +78,33 @@ fun DetailHero(
         ) {
             when (painter.state) {
                 is AsyncImagePainter.State.Success -> SubcomposeAsyncImageContent()
-                else -> Text(
-                    text = emoji,
-                    style = if (emoji.length > 4) {
-                        MaterialTheme.typography.titleLarge
-                    } else {
-                        MaterialTheme.typography.headlineLarge
-                    },
-                )
+                else -> Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = emoji,
+                        style = if (emoji.length > 4) {
+                            MaterialTheme.typography.titleLarge
+                        } else {
+                            MaterialTheme.typography.headlineLarge
+                        },
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun StatBox(value: String, label: String, modifier: Modifier = Modifier) {
+fun StatBox(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier,
+    valueStyle: TextStyle = MaterialTheme.typography.titleLarge,
+    valueMaxLines: Int = 1,
+) {
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
@@ -104,11 +117,11 @@ fun StatBox(value: String, label: String, modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge,
+                style = valueStyle,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                maxLines = valueMaxLines,
+                overflow = if (valueMaxLines == 1) TextOverflow.Ellipsis else TextOverflow.Clip,
             )
             Text(
                 text = label,

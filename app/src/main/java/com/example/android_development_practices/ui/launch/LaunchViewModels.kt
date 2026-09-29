@@ -1,8 +1,8 @@
 package com.example.android_development_practices.ui.launch
 
 import androidx.lifecycle.SavedStateHandle
-import com.example.android_development_practices.data.model.dto.Launch
-import com.example.android_development_practices.data.repository.SpaceRepository
+import com.example.android_development_practices.domain.model.Launch
+import com.example.android_development_practices.domain.SpaceUseCases
 import com.example.android_development_practices.di.IoDispatcher
 import com.example.android_development_practices.ui.common.BaseDetailViewModel
 import com.example.android_development_practices.ui.common.BaseListViewModel
@@ -12,21 +12,21 @@ import kotlinx.coroutines.CoroutineDispatcher
 
 @HiltViewModel
 class LaunchListViewModel @Inject constructor(
-    private val repository: SpaceRepository,
+    private val useCases: SpaceUseCases,
     @IoDispatcher dispatcher: CoroutineDispatcher,
 ) : BaseListViewModel<Launch>(dispatcher) {
 
-    override suspend fun loadData(): List<Launch> = repository.getUpcomingLaunches()
+    override suspend fun loadData(): List<Launch> = useCases.upcomingLaunches()
 }
 
 @HiltViewModel
 class LaunchDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val repository: SpaceRepository,
+    private val useCases: SpaceUseCases,
     @IoDispatcher dispatcher: CoroutineDispatcher,
 ) : BaseDetailViewModel<Launch>(
     argId = checkNotNull(savedStateHandle["id"]),
     ioDispatcher = dispatcher,
 ) {
-    override suspend fun loadData(id: String): Launch = repository.getLaunchDetail(id)
+    override suspend fun loadData(id: String): Launch = useCases.launch(id)
 }

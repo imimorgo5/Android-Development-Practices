@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.data.model.dto.SpaceEvent
+import com.example.android_development_practices.domain.model.SpaceEvent
 import com.example.android_development_practices.ui.common.ListItemCard
 import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.UiState
@@ -45,12 +45,12 @@ private fun EventListScreen(
 
 @Composable
 private fun EventListItem(event: SpaceEvent, onClick: () -> Unit) {
-    val tag = event.type?.name ?: "Событие"
+    val tag = event.typeName ?: "Событие"
     val date = formatIsoDate(event.date, fallback = "дата уточняется")
     val place = event.location ?: "место не указано"
 
     ListItemCard(
-        thumbnailUrl = event.image?.image_url,
+        thumbnailUrl = event.imageUrl,
         thumbnailFallback = tag,
         title = event.name,
         subtitle = "$date · $place",
