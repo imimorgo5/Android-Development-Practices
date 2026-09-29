@@ -97,6 +97,7 @@ data class LauncherConfig(
     val families: List<LauncherConfigFamily> = emptyList(),
     val full_name: String? = null,
     val variant: String? = null,
+    val total_launch_count: Int? = null,
 )
 
 @Serializable

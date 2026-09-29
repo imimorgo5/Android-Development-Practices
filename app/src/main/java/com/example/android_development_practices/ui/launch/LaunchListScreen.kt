@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.data.model.dto.Launch
+import com.example.android_development_practices.domain.model.Launch
 import com.example.android_development_practices.ui.common.ListItemCard
 import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.UiState
@@ -45,14 +45,14 @@ private fun LaunchListScreen(
 
 @Composable
 private fun LaunchListItem(launch: Launch, onClick: () -> Unit) {
-    val rocketCode = launch.rocket?.configuration?.families?.firstOrNull()?.name?.take(3)
-        ?: launch.launch_service_provider?.abbrev
+    val rocketCode = launch.rocketFamily?.take(3)
+        ?: launch.providerName?.take(3)
         ?: "🚀"
-    val provider = launch.launch_service_provider?.name ?: "—"
+    val provider = launch.providerName ?: "—"
     val date = formatIsoDate(launch.net, fallback = "дата уточняется")
 
     ListItemCard(
-        thumbnailUrl = launch.image?.image_url,
+        thumbnailUrl = launch.imageUrl,
         thumbnailFallback = rocketCode,
         title = launch.name,
         subtitle = "$provider · $date",

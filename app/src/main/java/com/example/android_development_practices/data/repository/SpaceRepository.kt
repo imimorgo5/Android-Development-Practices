@@ -1,58 +1,36 @@
 package com.example.android_development_practices.data.repository
 
-import com.example.android_development_practices.data.model.dto.Agency
-import com.example.android_development_practices.data.model.dto.Astronaut
-import com.example.android_development_practices.data.model.dto.Expedition
-import com.example.android_development_practices.data.model.dto.Launch
-import com.example.android_development_practices.data.model.dto.SpaceEvent
+import com.example.android_development_practices.data.mapper.toDomain
+import com.example.android_development_practices.data.remote.SpaceApi
+import com.example.android_development_practices.domain.model.Agency
+import com.example.android_development_practices.domain.model.Astronaut
+import com.example.android_development_practices.domain.model.Expedition
+import com.example.android_development_practices.domain.model.Launch
+import com.example.android_development_practices.domain.model.SpaceEvent
+import com.example.android_development_practices.domain.repository.SpaceRepository
+import javax.inject.Inject
 
-interface SpaceRepository {
-    suspend fun getUpcomingLaunches(): List<Launch>
-    suspend fun getLaunchDetail(id: String): Launch
-
-    suspend fun getUpcomingEvents(): List<SpaceEvent>
-    suspend fun getEventDetail(id: Int): SpaceEvent
-
-    suspend fun getExpeditions(): List<Expedition>
-    suspend fun getExpeditionDetail(id: Int): Expedition
-
-    suspend fun getAgencies(): List<Agency>
-    suspend fun getAgencyDetail(id: Int): Agency
-
-    suspend fun getAstronauts(): List<Astronaut>
-    suspend fun getAstronautDetail(id: Int): Astronaut
-}
-
-/** Реализация на моковых данных. */
-class MockSpaceRepository : SpaceRepository {
-
-    override suspend fun getUpcomingLaunches(): List<Launch> = MockSpaceData.launches
-
-    override suspend fun getLaunchDetail(id: String): Launch =
-        MockSpaceData.launches.firstOrNull { it.id == id }
-            ?: MockSpaceData.launches.first()
-
-    override suspend fun getUpcomingEvents(): List<SpaceEvent> = MockSpaceData.events
-
-    override suspend fun getEventDetail(id: Int): SpaceEvent =
-        MockSpaceData.events.firstOrNull { it.id == id }
-            ?: MockSpaceData.events.first()
-
-    override suspend fun getExpeditions(): List<Expedition> = MockSpaceData.expeditions
-
-    override suspend fun getExpeditionDetail(id: Int): Expedition =
-        MockSpaceData.expeditions.firstOrNull { it.id == id }
-            ?: MockSpaceData.expeditions.first()
-
-    override suspend fun getAgencies(): List<Agency> = MockSpaceData.agencies
-
-    override suspend fun getAgencyDetail(id: Int): Agency =
-        MockSpaceData.agencies.firstOrNull { it.id == id }
-            ?: MockSpaceData.agencies.first()
-
-    override suspend fun getAstronauts(): List<Astronaut> = MockSpaceData.astronauts
-
-    override suspend fun getAstronautDetail(id: Int): Astronaut =
-        MockSpaceData.astronauts.firstOrNull { it.id == id }
-            ?: MockSpaceData.astronauts.first()
+class SpaceRepositoryImpl @Inject constructor(private val api: SpaceApi) : SpaceRepository {
+    override suspend fun getUpcomingLaunches() = api.upcomingLaunches().results.map { it.toDomain() }
+    override suspend fun getLaunchDetail(id: String) = api.launch(id).toDomain()
+    override suspend fun getUpcomingEvents() = api.upcomingEvents().results.map { it.toDomain() }
+    override suspend fun getEventDetail(id: Int) = api.event(id).toDomain()
+    override suspend fun getExpeditions() = api.expeditions().results.map { it.toDomain() }
+    override suspend fun getExpeditionDetail(id: Int) = api.expedition(id).toDomain()
+    override suspend fun getAgencies(): List<Agency> {
+        val agencies = mutableListOf<Agency>()
+        var offset = 0
+        var totalCount: Int
+        do {
+            val page = api.agencies(offset = offset)
+            totalCount = page.count
+            if (page.results.isEmpty()) break
+            agencies += page.results.map { it.toDomain() }
+            offset += page.results.size
+        } while (offset < totalCount)
+        return agencies
+    }
+    override suspend fun getAgencyDetail(id: Int) = api.agency(id).toDomain()
+    override suspend fun getAstronauts() = api.astronauts().results.map { it.toDomain() }
+    override suspend fun getAstronautDetail(id: Int) = api.astronaut(id).toDomain()
 }
