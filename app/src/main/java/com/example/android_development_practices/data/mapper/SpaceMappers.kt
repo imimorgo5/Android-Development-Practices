@@ -10,6 +10,7 @@ import com.example.android_development_practices.domain.model.Astronaut
 import com.example.android_development_practices.domain.model.Expedition
 import com.example.android_development_practices.domain.model.Launch
 import com.example.android_development_practices.domain.model.SpaceEvent
+import com.example.android_development_practices.domain.model.CountryFilterValue
 
 internal fun LaunchDto.toDomain() = Launch(
     id = id,
@@ -29,6 +30,8 @@ internal fun LaunchDto.toDomain() = Launch(
     orbitName = mission?.orbit?.abbrev ?: mission?.orbit?.name,
     padName = pad?.name,
     padLocationName = pad?.location?.name,
+    providerId = launch_service_provider?.id,
+    statusId = status?.id,
 )
 
 internal fun SpaceEventDto.toDomain() = SpaceEvent(
@@ -43,6 +46,7 @@ internal fun SpaceEventDto.toDomain() = SpaceEvent(
     location = location,
     duration = duration,
     launchCount = launches.size,
+    typeId = type?.id,
 )
 
 internal fun ExpeditionDto.toDomain() = Expedition(
@@ -59,6 +63,7 @@ internal fun ExpeditionDto.toDomain() = Expedition(
     crewCount = crew.size,
     commanderName = crew.firstOrNull { it.role?.role.equals("Commander", ignoreCase = true) }
         ?.astronaut?.name,
+    stationId = spacestation?.id,
 )
 
 internal fun AgencyDto.toDomain() = Agency(
@@ -67,6 +72,12 @@ internal fun AgencyDto.toDomain() = Agency(
     abbreviation = abbrev,
     typeName = type?.name,
     countries = country.mapNotNull { it.name?.takeIf(String::isNotBlank) },
+    typeId = type?.id,
+    countryFilterValues = country.mapNotNull { country ->
+        val name = country.name?.takeIf(String::isNotBlank) ?: return@mapNotNull null
+        val code = country.alpha_3_code?.takeIf(String::isNotBlank) ?: return@mapNotNull null
+        CountryFilterValue(name, code)
+    }.distinctBy(CountryFilterValue::alpha3Code),
     imageUrl = image?.image_url,
     description = description,
     totalLaunchCount = total_launch_count,
@@ -92,4 +103,9 @@ internal fun AstronautDto.toDomain() = Astronaut(
     timeInSpace = time_in_space,
     evaTime = eva_time,
     firstFlight = first_flight,
+    nationalityFilterValues = nationality.mapNotNull {
+        it.nationality_name?.takeIf(String::isNotBlank)
+    }.distinct(),
+    agencyId = agency?.id,
+    statusId = status?.id,
 )

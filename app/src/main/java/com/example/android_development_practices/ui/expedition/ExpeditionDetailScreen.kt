@@ -31,6 +31,7 @@ import com.example.android_development_practices.ui.common.StatBox
 import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.ui.common.UiStateContent
 import com.example.android_development_practices.ui.common.formatIsoDate
+import com.example.android_development_practices.ui.common.FavoriteAction
 
 @Composable
 fun ExpeditionDetailRoute(
@@ -50,7 +51,10 @@ private fun ExpeditionDetailScreen(
 ) {
     ScreenScaffold(title = "Детали экспедиции", onBack = onBack) { contentModifier ->
         UiStateContent(uiState = uiState, onRetry = onRetry, modifier = contentModifier) { expedition ->
-            ExpeditionDetailContent(expedition = expedition)
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                FavoriteAction(expedition)
+                ExpeditionDetailContent(expedition = expedition)
+            }
         }
     }
 }

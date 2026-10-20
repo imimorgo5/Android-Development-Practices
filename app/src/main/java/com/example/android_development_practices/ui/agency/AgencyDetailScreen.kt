@@ -30,6 +30,7 @@ import com.example.android_development_practices.ui.common.SectionTitle
 import com.example.android_development_practices.ui.common.StatBox
 import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.ui.common.UiStateContent
+import com.example.android_development_practices.ui.common.FavoriteAction
 
 @Composable
 fun AgencyDetailRoute(
@@ -49,7 +50,10 @@ private fun AgencyDetailScreen(
 ) {
     ScreenScaffold(title = "Детали агентства", onBack = onBack) { contentModifier ->
         UiStateContent(uiState = uiState, onRetry = onRetry, modifier = contentModifier) { agency ->
-            AgencyDetailContent(agency = agency)
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                FavoriteAction(agency)
+                AgencyDetailContent(agency = agency)
+            }
         }
     }
 }

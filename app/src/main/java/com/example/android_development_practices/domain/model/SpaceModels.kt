@@ -1,5 +1,10 @@
 package com.example.android_development_practices.domain.model
 
+import kotlinx.serialization.Serializable
+
+data class FilterOption(val label: String, val value: String)
+
+@Serializable
 data class Launch(
     val id: String,
     val name: String,
@@ -18,8 +23,11 @@ data class Launch(
     val orbitName: String?,
     val padName: String?,
     val padLocationName: String?,
+    val providerId: Int? = null,
+    val statusId: Int? = null,
 )
 
+@Serializable
 data class SpaceEvent(
     val id: Int,
     val name: String,
@@ -32,8 +40,10 @@ data class SpaceEvent(
     val location: String?,
     val duration: String?,
     val launchCount: Int,
+    val typeId: Int? = null,
 )
 
+@Serializable
 data class Expedition(
     val id: Int,
     val name: String,
@@ -47,8 +57,13 @@ data class Expedition(
     val spacewalkCount: Int,
     val crewCount: Int,
     val commanderName: String?,
+    val stationId: Int? = null,
 )
 
+@Serializable
+data class CountryFilterValue(val name: String, val alpha3Code: String)
+
+@Serializable
 data class Agency(
     val id: Int,
     val name: String,
@@ -62,8 +77,11 @@ data class Agency(
     val administrator: String?,
     val foundingYear: Int?,
     val website: String?,
+    val typeId: Int? = null,
+    val countryFilterValues: List<CountryFilterValue> = emptyList(),
 )
 
+@Serializable
 data class Astronaut(
     val id: Int,
     val name: String,
@@ -80,4 +98,7 @@ data class Astronaut(
     val timeInSpace: String?,
     val evaTime: String?,
     val firstFlight: String?,
+    val nationalityFilterValues: List<String> = emptyList(),
+    val agencyId: Int? = null,
+    val statusId: Int? = null,
 )

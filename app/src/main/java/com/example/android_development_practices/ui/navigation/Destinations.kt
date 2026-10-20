@@ -2,6 +2,7 @@ package com.example.android_development_practices.ui.navigation
 
 object Routes {
     const val HOME = "home"
+    const val FAVORITES = "favorites"
 
     const val LAUNCH_LIST = "launch_list"
     const val EVENT_LIST = "event_list"
@@ -27,5 +28,5 @@ enum class BottomTab(
     val label: String,
 ) {
     Home(route = Routes.HOME, label = "Главная"),
-    Settings(route = "settings", label = "Настройки"),
+    Favorites(route = Routes.FAVORITES, label = "Избранное"),
 }

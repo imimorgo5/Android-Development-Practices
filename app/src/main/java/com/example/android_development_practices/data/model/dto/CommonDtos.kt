@@ -77,6 +77,9 @@ data class GeopoliticalCountry(
     val id: Int? = null,
     val name: String? = null,
     val alpha_2_code: String? = null,
+    val alpha_3_code: String? = null,
+    val nationality_name: String? = null,
+    val nationality_name_composed: String? = null,
 )
 
 /** Компактное описание агентства (поле agency / launch_service_provider). */
