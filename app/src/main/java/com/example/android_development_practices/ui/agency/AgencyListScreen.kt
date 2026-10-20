@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.data.model.dto.Agency
+import com.example.android_development_practices.domain.model.Agency
 import com.example.android_development_practices.ui.common.ListItemCard
 import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.UiState
@@ -44,12 +44,12 @@ private fun AgencyListScreen(
 
 @Composable
 private fun AgencyListItem(agency: Agency, onClick: () -> Unit) {
-    val abbrev = agency.abbrev ?: agency.name.take(3)
-    val country = agency.country.firstOrNull()?.name ?: "—"
-    val type = agency.type?.name ?: "агентство"
+    val abbrev = agency.abbreviation ?: agency.name.take(3)
+    val country = agency.countries.joinToString().ifBlank { "—" }
+    val type = agency.typeName ?: "агентство"
 
     ListItemCard(
-        thumbnailUrl = agency.image?.image_url,
+        thumbnailUrl = agency.imageUrl,
         thumbnailFallback = abbrev,
         title = agency.name,
         subtitle = "$country · $type",

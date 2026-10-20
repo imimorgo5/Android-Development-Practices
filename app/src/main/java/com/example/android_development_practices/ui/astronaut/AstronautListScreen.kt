@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.data.model.dto.Astronaut
+import com.example.android_development_practices.domain.model.Astronaut
 import com.example.android_development_practices.ui.common.ListItemCard
 import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.UiState
@@ -49,12 +49,12 @@ private fun AstronautListItem(astronaut: Astronaut, onClick: () -> Unit) {
         .takeLast(2)
         .joinToString("")
         .ifBlank { "🧑‍🚀" }
-    val agency = astronaut.agency?.abbrev ?: ""
-    val status = astronaut.status?.name ?: ""
+    val agency = astronaut.agencyAbbreviation ?: ""
+    val status = astronaut.statusName ?: ""
     val subtitle = listOf(agency, status).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { "—" }
 
     ListItemCard(
-        thumbnailUrl = astronaut.image?.image_url,
+        thumbnailUrl = astronaut.imageUrl,
         thumbnailFallback = initials,
         title = astronaut.name,
         subtitle = subtitle,

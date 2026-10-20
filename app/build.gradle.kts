@@ -6,6 +6,10 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
+val spaceApiBaseUrl = providers.gradleProperty("spaceApiBaseUrl")
+    .orElse("https://lldev.thespacedevs.com/")
+    .get()
+
 android {
     namespace = "com.example.android_development_practices"
     compileSdk {
@@ -20,6 +24,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "SPACE_API_BASE_URL", "\"$spaceApiBaseUrl\"")
     }
 
     buildTypes {
@@ -35,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -63,9 +69,11 @@ dependencies {
     // Загрузка изображений по URL (Coil)
     implementation(libs.coil.compose)
 
-    // Сериализация DTO-моделей (подготовка к будущей загрузке данных)
+    // JSON-декодирование ответов API и сетевые корутины
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

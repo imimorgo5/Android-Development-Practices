@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.data.model.dto.Expedition
+import com.example.android_development_practices.domain.model.Expedition
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.InfoChip
@@ -57,7 +57,7 @@ private fun ExpeditionDetailScreen(
 
 @Composable
 private fun ExpeditionDetailContent(expedition: Expedition) {
-    val station = expedition.spacestation?.name ?: "—"
+    val station = expedition.stationName ?: "—"
 
     ConstraintLayout(
         modifier = Modifier
@@ -76,7 +76,7 @@ private fun ExpeditionDetailContent(expedition: Expedition) {
 
         DetailHero(
             emoji = "🛰️",
-            imageUrl = expedition.mission_patches.firstOrNull()?.image_url,
+            imageUrl = expedition.patchImageUrl,
             modifier = Modifier.constrainAs(hero) {
                 top.linkTo(parent.top)
                 centerHorizontallyTo(parent)
@@ -115,18 +115,18 @@ private fun ExpeditionDetailContent(expedition: Expedition) {
                 },
         ) {
             StatBox(
-                value = "${expedition.crew.size} чел.",
+                value = "${expedition.crewCount} чел.",
                 label = "Экипаж",
                 modifier = Modifier.weight(1f),
             )
             StatBox(
-                value = expedition.mission_patches.size.toString(),
+                value = expedition.patchCount.toString(),
                 label = "Эмблемы",
                 modifier = Modifier.weight(1f),
             )
         }
 
-        if (expedition.spacestation?.description != null) {
+        if (expedition.stationDescription != null) {
             SectionTitle(
                 text = "О станции",
                 modifier = Modifier.constrainAs(stationTitle) {
@@ -135,7 +135,7 @@ private fun ExpeditionDetailContent(expedition: Expedition) {
                 },
             )
             Text(
-                text = expedition.spacestation.description,
+                text = expedition.stationDescription,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.constrainAs(stationText) {
@@ -151,7 +151,7 @@ private fun ExpeditionDetailContent(expedition: Expedition) {
             text = "Детали",
             modifier = Modifier.constrainAs(fieldsTitle) {
                 top.linkTo(
-                    if (expedition.spacestation?.description != null) stationText.bottom else statRow.bottom,
+                    if (expedition.stationDescription != null) stationText.bottom else statRow.bottom,
                     margin = 24.dp,
                 )
                 start.linkTo(parent.start)
@@ -172,11 +172,11 @@ private fun ExpeditionDetailContent(expedition: Expedition) {
                 DetailField(label = "Станция", value = station)
                 DetailField(label = "Начало", value = formatIsoDate(expedition.start))
                 DetailField(label = "Конец", value = formatIsoDate(expedition.end, fallback = "идёт сейчас"))
-                DetailField(label = "Выходов в космос", value = expedition.spacewalks.size.toString())
-                DetailField(label = "Эмблема", value = expedition.mission_patches.firstOrNull()?.name)
+                DetailField(label = "Выходов в космос", value = expedition.spacewalkCount.toString())
+                DetailField(label = "Эмблема", value = expedition.patchName)
                 DetailField(
                     label = "Командир",
-                    value = expedition.crew.firstOrNull { it.role?.role == "Commander" }?.astronaut?.name,
+                    value = expedition.commanderName,
                 )
             }
         }

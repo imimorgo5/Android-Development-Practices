@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.data.model.dto.Launch
+import com.example.android_development_practices.domain.model.Launch
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.InfoChip
@@ -59,11 +59,11 @@ private fun LaunchDetailScreen(
 
 @Composable
 private fun LaunchDetailContent(launch: Launch) {
-    val rocketFamily = launch.rocket?.configuration?.families?.firstOrNull()?.name ?: "🚀"
-    val provider = launch.launch_service_provider?.name ?: "—"
-    val missionName = launch.mission?.name ?: "—"
-    val orbit = launch.mission?.orbit?.abbrev ?: launch.mission?.orbit?.name ?: "—"
-    val window = launch.window_start?.let { formatIsoDate(it) } ?: "—"
+    val rocketFamily = launch.rocketFamily ?: "🚀"
+    val provider = launch.providerName ?: "—"
+    val missionName = launch.missionName ?: "—"
+    val orbit = launch.orbitName ?: "—"
+    val window = launch.windowStart?.let { formatIsoDate(it) } ?: "—"
 
     ConstraintLayout(
         modifier = Modifier
@@ -74,7 +74,6 @@ private fun LaunchDetailContent(launch: Launch) {
         val hero = createRef()
         val title = createRef()
         val statusChip = createRef()
-        val dateText = createRef()
         val statRow = createRef()
         val descTitle = createRef()
         val descText = createRef()
@@ -83,7 +82,7 @@ private fun LaunchDetailContent(launch: Launch) {
 
         DetailHero(
             emoji = rocketFamily,
-            imageUrl = launch.image?.image_url,
+            imageUrl = launch.imageUrl,
             modifier = Modifier.constrainAs(hero) {
                 top.linkTo(parent.top)
                 centerHorizontallyTo(parent)
@@ -102,21 +101,11 @@ private fun LaunchDetailContent(launch: Launch) {
             },
         )
 
-        val statusText = launch.status?.name ?: launch.status?.abbrev ?: "Статус уточняется"
+        val statusText = launch.status ?: "Статус уточняется"
         InfoChip(
             text = statusText,
             modifier = Modifier.constrainAs(statusChip) {
                 top.linkTo(title.bottom, margin = 12.dp)
-                centerHorizontallyTo(parent)
-            },
-        )
-
-        Text(
-            text = "Старт: ${formatIsoDate(launch.net, fallback = "дата уточняется")}",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.constrainAs(dateText) {
-                top.linkTo(statusChip.bottom, margin = 8.dp)
                 centerHorizontallyTo(parent)
             },
         )
@@ -126,20 +115,20 @@ private fun LaunchDetailContent(launch: Launch) {
             modifier = Modifier
                 .height(IntrinsicSize.Max)
                 .constrainAs(statRow) {
-                    top.linkTo(dateText.bottom, margin = 16.dp)
+                    top.linkTo(statusChip.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                     width = Dimension.fillToConstraints
                 },
         ) {
             StatBox(
-                value = launch.probability?.let { "$it%" } ?: "—",
-                label = "Вероятность запуска",
+                value = formatIsoDate(launch.net, fallback = "—"),
+                label = "Дата старта",
                 modifier = Modifier.weight(1f),
             )
             StatBox(
-                value = launch.orbital_launch_attempt_count?.toString() ?: "—",
-                label = "Запусков ракеты",
+                value = launch.rocketLaunchCount?.toString() ?: "—",
+                label = "Запусков модели ракеты",
                 modifier = Modifier.weight(1f),
             )
         }
@@ -153,7 +142,7 @@ private fun LaunchDetailContent(launch: Launch) {
         )
 
         Text(
-            text = launch.mission?.description ?: "Описание миссии уточняется.",
+            text = launch.missionDescription ?: "Описание миссии уточняется.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.constrainAs(descText) {
@@ -184,14 +173,14 @@ private fun LaunchDetailContent(launch: Launch) {
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 DetailField(label = "Организация", value = provider)
-                DetailField(label = "Ракета", value = launch.rocket?.configuration?.full_name ?: "—")
+                DetailField(label = "Ракета", value = launch.rocketName ?: "—")
                 DetailField(label = "Миссия", value = missionName)
                 DetailField(label = "Орбита", value = orbit)
                 DetailField(
                     label = "Площадка",
                     value = buildList {
-                        launch.pad?.name?.let { add(it) }
-                        launch.pad?.location?.name?.let { add(it) }
+                        launch.padName?.let { add(it) }
+                        launch.padLocationName?.let { add(it) }
                     }.joinToString(" · ").ifBlank { "—" },
                 )
                 DetailField(label = "Окно запуска", value = window)

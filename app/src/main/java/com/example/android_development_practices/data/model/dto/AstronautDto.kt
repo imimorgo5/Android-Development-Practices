@@ -22,7 +22,4 @@ data class Astronaut(
     val wiki: String? = null,
     val first_flight: String? = null,
     val last_flight: String? = null,
-    val flights_count: Int? = null,
-    val landings_count: Int? = null,
-    val spacewalks_count: Int? = null,
 )

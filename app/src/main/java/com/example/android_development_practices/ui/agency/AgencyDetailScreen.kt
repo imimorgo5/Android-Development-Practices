@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.data.model.dto.Agency
+import com.example.android_development_practices.domain.model.Agency
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.InfoChip
@@ -72,8 +72,8 @@ private fun AgencyDetailContent(agency: Agency) {
         val fieldsCard = createRef()
 
         DetailHero(
-            emoji = agency.abbrev ?: "🏛️",
-            imageUrl = agency.image?.image_url,
+            emoji = agency.abbreviation ?: "🏛️",
+            imageUrl = agency.imageUrl,
             modifier = Modifier.constrainAs(hero) {
                 top.linkTo(parent.top)
                 centerHorizontallyTo(parent)
@@ -93,7 +93,7 @@ private fun AgencyDetailContent(agency: Agency) {
         )
 
         InfoChip(
-            text = agency.type?.name ?: "Агентство",
+            text = agency.typeName ?: "Агентство",
             modifier = Modifier.constrainAs(typeChip) {
                 top.linkTo(title.bottom, margin = 12.dp)
                 centerHorizontallyTo(parent)
@@ -112,12 +112,12 @@ private fun AgencyDetailContent(agency: Agency) {
                 },
         ) {
             StatBox(
-                value = agency.total_launch_count?.toString() ?: "—",
+                value = agency.totalLaunchCount?.toString() ?: "—",
                 label = "Всего запусков",
                 modifier = Modifier.weight(1f),
             )
             StatBox(
-                value = agency.successful_launches?.toString() ?: "—",
+                value = agency.successfulLaunchCount?.toString() ?: "—",
                 label = "Успешных",
                 modifier = Modifier.weight(1f),
             )
@@ -162,12 +162,12 @@ private fun AgencyDetailContent(agency: Agency) {
             },
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                DetailField(label = "Аббревиатура", value = agency.abbrev)
-                DetailField(label = "Тип", value = agency.type?.name)
-                DetailField(label = "Страна", value = agency.country.firstOrNull()?.name)
+                DetailField(label = "Аббревиатура", value = agency.abbreviation)
+                DetailField(label = "Тип", value = agency.typeName)
+                DetailField(label = "Страны", value = agency.countries.joinToString().takeIf { it.isNotBlank() })
                 DetailField(label = "Руководитель", value = agency.administrator)
-                DetailField(label = "Год основания", value = agency.founding_year?.toString())
-                DetailField(label = "Сайт", value = agency.info_url)
+                DetailField(label = "Год основания", value = agency.foundingYear?.toString())
+                DetailField(label = "Сайт", value = agency.website)
             }
         }
     }

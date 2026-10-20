@@ -9,6 +9,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import java.io.IOException
+import retrofit2.HttpException
+import kotlinx.serialization.SerializationException
 
 abstract class BaseListViewModel<T>(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -31,7 +35,10 @@ abstract class BaseListViewModel<T>(
             _uiState.value = runCatching { withContext(ioDispatcher) { loadData() } }
                 .fold(
                     onSuccess = { UiState.Success(it) },
-                    onFailure = { UiState.Error(it.localizedMessage ?: "Не удалось загрузить данные") },
+                    onFailure = { error ->
+                        if (error is CancellationException) throw error
+                        UiState.Error(error.toUserMessage())
+                    },
                 )
         }
     }
@@ -59,8 +66,23 @@ abstract class BaseDetailViewModel<T>(
             _uiState.value = runCatching { withContext(ioDispatcher) { loadData(argId) } }
                 .fold(
                     onSuccess = { UiState.Success(it) },
-                    onFailure = { UiState.Error(it.localizedMessage ?: "Не удалось загрузить данные") },
+                    onFailure = { error ->
+                        if (error is CancellationException) throw error
+                        UiState.Error(error.toUserMessage())
+                    },
                 )
         }
     }
+}
+
+private fun Throwable.toUserMessage(): String = when (this) {
+    is IOException -> "Не удалось связаться с сервером. Проверьте подключение и повторите попытку."
+    is SerializationException -> "Сервер вернул данные в неожиданном формате. Попробуйте позже."
+    is HttpException -> when (code()) {
+        404 -> "Запрошенная запись не найдена."
+        429 -> "Слишком много запросов к API. Попробуйте позже или переключите API на сервер разработки."
+        in 500..599 -> "Сервер временно недоступен (${code()}). Попробуйте позже."
+        else -> "Ошибка сервера (${code()}). Попробуйте ещё раз."
+    }
+    else -> localizedMessage?.takeIf { it.isNotBlank() } ?: "Не удалось загрузить данные. Попробуйте ещё раз."
 }
