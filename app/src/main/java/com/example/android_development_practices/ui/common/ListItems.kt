@@ -14,10 +14,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,6 +86,8 @@ fun ListItemCard(
     thumbnailUrl: String? = null,
     thumbnailFallback: String = "",
     modifier: Modifier = Modifier,
+    isFavorite: Boolean = false,
+    onFavoriteClick: (() -> Unit)? = null,
 ) {
     Surface(
         onClick = onClick,
@@ -112,10 +120,26 @@ fun ListItemCard(
                     )
                 }
             }
+            if (onFavoriteClick != null) IconButton(onClick = onFavoriteClick) {
+                Icon(if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, if (isFavorite) "Убрать из избранного" else "В избранное", tint = if (isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+fun FavoriteAction(item: Any, modifier: Modifier = Modifier) {
+    val viewModel: FavoriteViewModel = hiltViewModel()
+    val favorites by viewModel.favorites.collectAsState()
+    val snapshot = favoriteSnapshot(item)
+    val saved = favorites.any { it.key == snapshot.key }
+    Row(modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End) {
+        IconButton(onClick = { viewModel.toggle(snapshot) }) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                if (saved) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                if (saved) "Убрать из избранного" else "В избранное",
+                tint = if (saved) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

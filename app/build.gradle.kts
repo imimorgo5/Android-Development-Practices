@@ -69,11 +69,17 @@ dependencies {
     // Загрузка изображений по URL (Coil)
     implementation(libs.coil.compose)
 
+    // Локальное хранение избранного
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
     // JSON-декодирование ответов API и сетевые корутины
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
+    implementation(libs.okhttp.logging.interceptor)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

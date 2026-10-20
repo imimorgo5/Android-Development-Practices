@@ -32,6 +32,7 @@ import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.ui.common.UiStateContent
 import com.example.android_development_practices.ui.common.formatIsoDate
 import com.example.android_development_practices.ui.common.formatIsoDuration
+import com.example.android_development_practices.ui.common.FavoriteAction
 
 @Composable
 fun AstronautDetailRoute(
@@ -49,9 +50,12 @@ private fun AstronautDetailScreen(
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
-    ScreenScaffold(title = "Детали астронавта", onBack = onBack) { contentModifier ->
+    ScreenScaffold(title = "Детали космонавта/астронавта", onBack = onBack) { contentModifier ->
         UiStateContent(uiState = uiState, onRetry = onRetry, modifier = contentModifier) { astronaut ->
-            AstronautDetailContent(astronaut = astronaut)
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                FavoriteAction(astronaut)
+                AstronautDetailContent(astronaut = astronaut)
+            }
         }
     }
 }

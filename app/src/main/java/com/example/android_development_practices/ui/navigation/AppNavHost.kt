@@ -1,12 +1,16 @@
 package com.example.android_development_practices.ui.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -14,10 +18,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -38,16 +44,29 @@ import com.example.android_development_practices.ui.expedition.ExpeditionListRou
 import com.example.android_development_practices.ui.home.HomeRoute
 import com.example.android_development_practices.ui.launch.LaunchDetailRoute
 import com.example.android_development_practices.ui.launch.LaunchListRoute
+import com.example.android_development_practices.data.local.FavoriteEntity
+import com.example.android_development_practices.ui.common.FavoriteViewModel
+import com.example.android_development_practices.ui.common.ListItemCard
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
 private fun BottomTab.icon(): ImageVector = when (this) {
     BottomTab.Home -> Icons.Filled.Home
-    BottomTab.Settings -> Icons.Filled.Settings
+    BottomTab.Favorites -> Icons.Filled.Favorite
 }
 
 @Composable
 fun MainApp() {
     val tabNavController = rememberNavController()
     val homeNavController = rememberNavController()
+    var returnToFavorites by remember { mutableStateOf(false) }
+
+    fun handleDetailBack() {
+        homeNavController.popBackStack()
+        if (returnToFavorites) {
+            returnToFavorites = false
+            tabNavController.navigate(BottomTab.Favorites.route) { launchSingleTop = true }
+        }
+    }
 
     val tabBackStack by tabNavController.currentBackStackEntryAsState()
     val currentRoute = tabBackStack?.destination?.route
@@ -74,10 +93,22 @@ fun MainApp() {
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(BottomTab.Home.route) {
-                HomeTabNavHost(homeNavController)
+                HomeTabNavHost(homeNavController, returnToFavorites, ::handleDetailBack)
             }
-            composable(BottomTab.Settings.route) {
-                SettingsScreen()
+            composable(BottomTab.Favorites.route) {
+                FavoritesRoute(
+                    onOpen = { item ->
+                        returnToFavorites = true
+                        tabNavController.navigate(BottomTab.Home.route)
+                        homeNavController.navigate(when (item.category) {
+                            "launch" -> Routes.launchDetail(item.detailId)
+                            "event" -> Routes.eventDetail(item.detailId.toInt())
+                            "expedition" -> Routes.expeditionDetail(item.detailId.toInt())
+                            "agency" -> Routes.agencyDetail(item.detailId.toInt())
+                            else -> Routes.astronautDetail(item.detailId.toInt())
+                        })
+                    },
+                )
             }
         }
     }
@@ -101,7 +132,18 @@ private fun selectTab(
 }
 
 @Composable
-private fun HomeTabNavHost(homeNavController: NavHostController) {
+private fun HomeTabNavHost(
+    homeNavController: NavHostController,
+    returnToFavorites: Boolean,
+    onDetailBack: () -> Unit,
+) {
+    val backStack by homeNavController.currentBackStackEntryAsState()
+    val currentRoute = backStack?.destination?.route
+    val detailRoutes = setOf(
+        Routes.LAUNCH_DETAIL, Routes.EVENT_DETAIL, Routes.EXPEDITION_DETAIL,
+        Routes.AGENCY_DETAIL, Routes.ASTRONAUT_DETAIL,
+    )
+    BackHandler(enabled = returnToFavorites && currentRoute in detailRoutes) { onDetailBack() }
     NavHost(
         navController = homeNavController,
         startDestination = Routes.HOME,
@@ -145,31 +187,31 @@ private fun HomeTabNavHost(homeNavController: NavHostController) {
         composable(Routes.LAUNCH_DETAIL, arguments = idArgument()) { entry ->
             LaunchDetailRoute(
                 id = entry.arguments?.getString("id").orEmpty(),
-                onBack = { homeNavController.popBackStack() },
+                onBack = onDetailBack,
             )
         }
         composable(Routes.EVENT_DETAIL, arguments = idArgument()) { entry ->
             EventDetailRoute(
                 id = entry.arguments?.getString("id").orEmpty(),
-                onBack = { homeNavController.popBackStack() },
+                onBack = onDetailBack,
             )
         }
         composable(Routes.EXPEDITION_DETAIL, arguments = idArgument()) { entry ->
             ExpeditionDetailRoute(
                 id = entry.arguments?.getString("id").orEmpty(),
-                onBack = { homeNavController.popBackStack() },
+                onBack = onDetailBack,
             )
         }
         composable(Routes.AGENCY_DETAIL, arguments = idArgument()) { entry ->
             AgencyDetailRoute(
                 id = entry.arguments?.getString("id").orEmpty(),
-                onBack = { homeNavController.popBackStack() },
+                onBack = onDetailBack,
             )
         }
         composable(Routes.ASTRONAUT_DETAIL, arguments = idArgument()) { entry ->
             AstronautDetailRoute(
                 id = entry.arguments?.getString("id").orEmpty(),
-                onBack = { homeNavController.popBackStack() },
+                onBack = onDetailBack,
             )
         }
     }
@@ -178,16 +220,24 @@ private fun HomeTabNavHost(homeNavController: NavHostController) {
 private fun idArgument() = listOf(navArgument("id") { type = NavType.StringType })
 
 @Composable
-private fun SettingsScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = "Здесь появятся настройки приложения",
-            style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center,
-        )
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+private fun FavoritesRoute(onOpen: (FavoriteEntity) -> Unit) {
+    val vm: FavoriteViewModel = hiltViewModel()
+    val items by vm.favorites.collectAsState()
+    androidx.compose.material3.Scaffold(topBar = { androidx.compose.material3.TopAppBar(title = { Text("Избранное") }) }) { pad ->
+        if (items.isEmpty()) Text("Здесь будут сохранённые записи", Modifier.fillMaxSize().padding(pad).wrapContentSize())
+        else LazyColumn(Modifier.fillMaxSize().padding(pad), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            items(items, key = { it.key }) { item ->
+                ListItemCard(
+                    title = item.title,
+                    subtitle = "${item.category.replaceFirstChar { it.uppercase() }} · ${item.subtitle.ifBlank { "—" }}",
+                    thumbnailUrl = item.imageUrl,
+                    thumbnailFallback = item.category.uppercase(),
+                    onClick = { onOpen(item) },
+                    isFavorite = true,
+                    onFavoriteClick = { vm.remove(item.key) },
+                )
+            }
+        }
     }
 }
