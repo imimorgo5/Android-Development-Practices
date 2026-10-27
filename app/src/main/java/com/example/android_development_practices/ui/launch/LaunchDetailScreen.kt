@@ -33,6 +33,7 @@ import com.example.android_development_practices.ui.common.StatBox
 import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.ui.common.UiStateContent
 import com.example.android_development_practices.ui.common.formatIsoDate
+import com.example.android_development_practices.ui.common.FavoriteAction
 
 @Composable
 fun LaunchDetailRoute(
@@ -52,7 +53,10 @@ private fun LaunchDetailScreen(
 ) {
     ScreenScaffold(title = "Детали запуска", onBack = onBack) { contentModifier ->
         UiStateContent(uiState = uiState, onRetry = onRetry, modifier = contentModifier) { launch ->
-            LaunchDetailContent(launch = launch)
+            Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                FavoriteAction(launch)
+                LaunchDetailContent(launch = launch)
+            }
         }
     }
 }

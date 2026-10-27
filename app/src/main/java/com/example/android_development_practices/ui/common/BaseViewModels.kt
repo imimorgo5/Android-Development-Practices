@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import java.io.IOException
 import retrofit2.HttpException
@@ -16,23 +17,33 @@ import kotlinx.serialization.SerializationException
 
 abstract class BaseListViewModel<T>(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    initialFilters: CatalogFilters = CatalogFilters(),
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<List<T>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<T>>> = _uiState.asStateFlow()
 
+    private var currentFilters = initialFilters
+    private var loadJob: Job? = null
+
     init {
-        load()
+        load(currentFilters)
     }
 
-    abstract suspend fun loadData(): List<T>
+    abstract suspend fun loadData(filters: CatalogFilters): List<T>
 
-    fun retry() = load()
+    fun retry() = load(currentFilters)
 
-    private fun load() {
-        viewModelScope.launch {
+    fun applyFilters(filters: CatalogFilters) {
+        currentFilters = filters
+        load(filters)
+    }
+
+    private fun load(filters: CatalogFilters) {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _uiState.value = UiState.Loading
-            _uiState.value = runCatching { withContext(ioDispatcher) { loadData() } }
+            _uiState.value = runCatching { withContext(ioDispatcher) { loadData(filters) } }
                 .fold(
                     onSuccess = { UiState.Success(it) },
                     onFailure = { error ->
