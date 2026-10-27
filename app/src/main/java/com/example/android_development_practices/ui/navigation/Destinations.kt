@@ -3,6 +3,8 @@ package com.example.android_development_practices.ui.navigation
 object Routes {
     const val HOME = "home"
     const val FAVORITES = "favorites"
+    const val PROFILE = "profile"
+    const val EDIT_PROFILE = "profile/edit"
 
     const val LAUNCH_LIST = "launch_list"
     const val EVENT_LIST = "event_list"
@@ -29,4 +31,5 @@ enum class BottomTab(
 ) {
     Home(route = Routes.HOME, label = "Главная"),
     Favorites(route = Routes.FAVORITES, label = "Избранное"),
+    Profile(route = Routes.PROFILE, label = "Профиль"),
 }

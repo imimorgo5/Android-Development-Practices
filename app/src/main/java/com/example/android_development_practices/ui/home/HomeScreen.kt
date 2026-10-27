@@ -1,6 +1,6 @@
 package com.example.android_development_practices.ui.home
 
-import androidx.compose.foundation.Image
+import coil.compose.AsyncImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,7 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 
@@ -84,8 +83,8 @@ private fun CategoryCard(category: HomeCategory, onClick: () -> Unit) {
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer),
             ) {
-                Image(
-                    painter = painterResource(category.imageRes),
+                AsyncImage(
+                    model = category.imageRes,
                     contentDescription = category.title,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
