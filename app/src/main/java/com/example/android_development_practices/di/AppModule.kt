@@ -27,6 +27,11 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+    @Provides
+    @Singleton
+    fun provideProfileRepository(repository: com.example.android_development_practices.data.profile.LocalProfileRepository):
+        com.example.android_development_practices.domain.profile.ProfileRepository = repository
+
 
     @Provides
     @Singleton
