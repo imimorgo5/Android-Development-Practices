@@ -38,8 +38,8 @@ import java.util.Locale
 import java.util.TimeZone
 
 @Composable
-internal fun <T : Any> FilterSettingsContent(
-    definitions: List<CatalogFilterDefinition<T>>,
+internal fun FilterSettingsContent(
+    definitions: List<CatalogFilterDefinition>,
     options: Map<String, List<CatalogOption>>,
     values: Map<String, String>,
     onValueChange: (String, String) -> Unit,

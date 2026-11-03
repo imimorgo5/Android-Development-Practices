@@ -1,5 +1,10 @@
 package com.example.android_development_practices.ui.profile
 
+import android.app.TimePickerDialog
+import android.provider.Settings
+import com.example.android_development_practices.R
+import com.example.android_development_practices.domain.profile.ReminderAccess
+import androidx.compose.ui.res.painterResource
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.ClipData
@@ -63,7 +68,7 @@ fun ProfileRoute(onEdit: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         } else if (!state.loaded) {
             Column(Modifier.padding(20.dp)) {
-                ErrorMessage(state.error ?: "Не удалось загрузить профиль", vm::reload)
+                ErrorMessage(state.loadErrorMessage, vm::reload)
             }
         } else Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -73,8 +78,8 @@ fun ProfileRoute(onEdit: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
                 Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     ProfileAvatar(state.profile.avatarUri)
-                    Text(state.profile.fullName.ifBlank { "Ваш профиль" }, style = MaterialTheme.typography.headlineSmall)
-                    Text(state.profile.displayName.ifBlank { "Исследователь космоса" },
+                    Text(state.profile.fullName, style = MaterialTheme.typography.headlineSmall)
+                    Text(state.profile.displayName,
                         style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     OutlinedButton(onClick = onEdit) {
                         Icon(Icons.Default.Edit, contentDescription = null, Modifier.size(18.dp))
@@ -86,11 +91,14 @@ fun ProfileRoute(onEdit: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
             Text("Личные данные", style = MaterialTheme.typography.titleLarge)
             Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
                 Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    state.profile.favoriteClassText?.let { text ->
+                        Text(text, style = MaterialTheme.typography.titleMedium)
+                    }
                     Text("Портфолио", style = MaterialTheme.typography.titleMedium)
-                    Text(state.profile.portfolioUrl.ifBlank { "Добавьте ссылку на документ в редакторе профиля" },
+                    Text(state.profile.portfolioText,
                         style = MaterialTheme.typography.bodyMedium)
                     Button(onClick = vm::downloadPortfolio,
-                        enabled = state.profile.portfolioUrl.isNotBlank() && !state.downloading,
+                        enabled = state.canDownload,
                         modifier = Modifier.fillMaxWidth()) {
                         if (state.downloading) {
                             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
@@ -109,6 +117,8 @@ fun ProfileRoute(onEdit: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {
 fun EditProfileRoute(onBack: () -> Unit, vm: EditProfileViewModel = hiltViewModel()) {
     val state by vm.state.collectAsState()
     val context = LocalContext.current
+    ReminderPermissionHandler(vm)
+    var clockDialog by rememberSaveable { mutableStateOf(false) }
     var photoDialog by rememberSaveable { mutableStateOf(false) }
     var permissionChecked by rememberSaveable { mutableStateOf(false) }
     val storagePermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -142,12 +152,12 @@ fun EditProfileRoute(onBack: () -> Unit, vm: EditProfileViewModel = hiltViewMode
             } catch (_: SecurityException) { vm.photoTaken(false); vm.showError("Камера недоступна. Проверьте разрешения приложения") }
         }
     }
-    BackHandler(enabled = state.busy) { /* Finish the file operation before leaving. */ }
+    BackHandler(enabled = state.busy) {}
     ScreenScaffold(title = "Редактирование профиля", onBack = { if (!state.busy) onBack() }) {
         if (state.loading) Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         else if (!state.loaded) {
             Column(Modifier.padding(20.dp)) {
-                ErrorMessage(state.error ?: "Не удалось загрузить профиль", vm::reload)
+                ErrorMessage(state.loadErrorMessage, vm::reload)
             }
         } else Column(
             Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -171,8 +181,24 @@ fun EditProfileRoute(onBack: () -> Unit, vm: EditProfileViewModel = hiltViewMode
                 modifier = Modifier.fillMaxWidth(), enabled = !state.busy, singleLine = true,
                 shape = AppTextFieldDefaults.shape, colors = AppTextFieldDefaults.colors(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri))
+            OutlinedTextField(
+                value = state.profile.favoriteClassTime,
+                onValueChange = vm::updateClassTime,
+                label = { Text("Время любимой пары") },
+                placeholder = { Text("HH:mm") },
+                supportingText = { Text(state.timeSupportingText) },
+                isError = state.visibleTimeError != null,
+                trailingIcon = {
+                    IconButton(onClick = { clockDialog = true }, enabled = !state.busy) {
+                        Icon(painterResource(R.drawable.ic_class_reminder), contentDescription = "Выбрать время на часах")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(), enabled = !state.busy, singleLine = true,
+                shape = AppTextFieldDefaults.shape, colors = AppTextFieldDefaults.colors(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
+            )
             state.error?.let { ErrorMessage(it) }
-            Button(onClick = vm::save, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = vm::save, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
                 if (state.busy) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     Spacer(Modifier.width(8.dp))
@@ -180,6 +206,20 @@ fun EditProfileRoute(onBack: () -> Unit, vm: EditProfileViewModel = hiltViewMode
                 Text(if (state.busy) "Подождите…" else "Готово")
             }
         }
+    }
+    if (clockDialog) DisposableEffect(context) {
+        val time = vm.clockSelection()
+        val dialog = TimePickerDialog(
+            context,
+            { _, hour, minute -> vm.setClassTime(hour, minute); clockDialog = false },
+            time.hour,
+            time.minute,
+            true,
+        )
+        dialog.setTitle("Время любимой пары")
+        dialog.setOnDismissListener { clockDialog = false }
+        dialog.show()
+        onDispose { dialog.dismiss() }
     }
     if (photoDialog) AlertDialog(
         onDismissRequest = { photoDialog = false },
@@ -218,6 +258,51 @@ private fun ErrorMessage(message: String, onRetry: (() -> Unit)? = null) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             Text(message, color = MaterialTheme.colorScheme.onErrorContainer)
             if (onRetry != null) TextButton(onClick = onRetry) { Text("Повторить загрузку профиля") }
+        }
+    }
+}
+
+@Composable
+private fun ReminderPermissionHandler(vm: EditProfileViewModel) {
+    val context = LocalContext.current
+    val notificationSettings = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        vm.reminderSettingsReturned(ReminderAccess.NOTIFICATION_SETTINGS)
+    }
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        vm.reminderPermissionResult(ReminderAccess.NOTIFICATIONS, granted)
+    }
+    val exactAlarmPermission = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        vm.reminderSettingsReturned(ReminderAccess.EXACT_ALARMS)
+    }
+    LaunchedEffect(vm) {
+        vm.reminderPermissions.collect { access ->
+            try {
+                when (access) {
+                    ReminderAccess.NOTIFICATIONS -> {
+                        if (Build.VERSION.SDK_INT >= 33) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        else vm.reminderPermissionRequestFailed()
+                    }
+                    ReminderAccess.NOTIFICATION_SETTINGS -> {
+                        val intent = if (Build.VERSION.SDK_INT >= 26) {
+                            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                        } else {
+                            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))
+                        }
+                        notificationSettings.launch(intent)
+                    }
+                    ReminderAccess.EXACT_ALARMS -> {
+                        if (Build.VERSION.SDK_INT >= 31) {
+                            exactAlarmPermission.launch(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                Uri.parse("package:${context.packageName}")))
+                        }
+                    }
+                    ReminderAccess.READY -> Unit
+                }
+            } catch (_: ActivityNotFoundException) {
+                vm.reminderPermissionRequestFailed()
+            } catch (_: SecurityException) {
+                vm.reminderPermissionRequestFailed()
+            }
         }
     }
 }
