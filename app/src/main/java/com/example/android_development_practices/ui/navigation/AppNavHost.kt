@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import com.example.android_development_practices.ui.profile.ProfileRoute
+import com.example.android_development_practices.ui.profile.EditProfileRoute
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
@@ -52,6 +55,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 private fun BottomTab.icon(): ImageVector = when (this) {
     BottomTab.Home -> Icons.Filled.Home
     BottomTab.Favorites -> Icons.Filled.Favorite
+    BottomTab.Profile -> Icons.Filled.Person
 }
 
 @Composable
@@ -73,10 +77,10 @@ fun MainApp() {
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            if (currentRoute != Routes.EDIT_PROFILE) NavigationBar {
                 BottomTab.entries.forEach { tab ->
                     NavigationBarItem(
-                        selected = currentRoute == tab.route,
+                        selected = currentRoute == tab.route || (tab == BottomTab.Profile && currentRoute == Routes.EDIT_PROFILE),
                         onClick = {
                             selectTab(tabNavController, homeNavController, tab, currentRoute)
                         },
@@ -92,6 +96,12 @@ fun MainApp() {
             startDestination = BottomTab.Home.route,
             modifier = Modifier.padding(innerPadding),
         ) {
+            composable(BottomTab.Profile.route) {
+                ProfileRoute(onEdit = { tabNavController.navigate(Routes.EDIT_PROFILE) { launchSingleTop = true } })
+            }
+            composable(Routes.EDIT_PROFILE) {
+                EditProfileRoute(onBack = { tabNavController.popBackStack() })
+            }
             composable(BottomTab.Home.route) {
                 HomeTabNavHost(homeNavController, returnToFavorites, ::handleDetailBack)
             }
@@ -126,7 +136,7 @@ private fun selectTab(
             launchSingleTop = true
             restoreState = true
         }
-    } else {
+    } else if (tab == BottomTab.Home) {
         homeNavController.popBackStack(Routes.HOME, inclusive = false)
     }
 }
