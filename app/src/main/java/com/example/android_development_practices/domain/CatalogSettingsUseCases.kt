@@ -6,7 +6,7 @@ import com.example.android_development_practices.domain.repository.CatalogSettin
 import javax.inject.Inject
 
 class CatalogSettingsUseCases @Inject constructor(private val repository: CatalogSettingsRepository) {
-    fun load(catalog: String) = repository.load(catalog)
-    fun saveFilters(catalog: String, filters: CatalogFilters) = repository.saveFilters(catalog, filters)
-    fun saveOptions(catalog: String, options: Map<String, List<FilterOption>>) = repository.saveOptions(catalog, options)
+    suspend fun load(catalog: String) = repository.load(catalog)
+    suspend fun saveFilters(catalog: String, filters: CatalogFilters) = repository.saveFilters(catalog, filters)
+    suspend fun saveOptions(catalog: String, options: Map<String, List<FilterOption>>) = repository.saveOptions(catalog, options)
 }

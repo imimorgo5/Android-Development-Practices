@@ -11,8 +11,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 @Singleton
-class CatalogSettingsStore @Inject constructor(@ApplicationContext context: Context) {
-    private val preferences = context.getSharedPreferences("list_filters", Context.MODE_PRIVATE)
+class CatalogSettingsStore @Inject constructor(@param:ApplicationContext private val context: Context) {
+    private val preferences by lazy { context.getSharedPreferences("list_filters", Context.MODE_PRIVATE) }
 
     fun load(catalog: String): CatalogSettings {
         val params = preferences.all

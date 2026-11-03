@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.domain.model.Expedition
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.InfoChip
@@ -30,7 +29,6 @@ import com.example.android_development_practices.ui.common.SectionTitle
 import com.example.android_development_practices.ui.common.StatBox
 import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.ui.common.UiStateContent
-import com.example.android_development_practices.ui.common.formatIsoDate
 import com.example.android_development_practices.ui.common.FavoriteAction
 
 @Composable
@@ -45,14 +43,14 @@ fun ExpeditionDetailRoute(
 
 @Composable
 private fun ExpeditionDetailScreen(
-    uiState: UiState<Expedition>,
+    uiState: UiState<ExpeditionDetailUiModel>,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
     ScreenScaffold(title = "Детали экспедиции", onBack = onBack) { contentModifier ->
         UiStateContent(uiState = uiState, onRetry = onRetry, modifier = contentModifier) { expedition ->
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-                FavoriteAction(expedition)
+                FavoriteAction(expedition.source)
                 ExpeditionDetailContent(expedition = expedition)
             }
         }
@@ -60,9 +58,7 @@ private fun ExpeditionDetailScreen(
 }
 
 @Composable
-private fun ExpeditionDetailContent(expedition: Expedition) {
-    val station = expedition.stationName ?: "—"
-
+private fun ExpeditionDetailContent(expedition: ExpeditionDetailUiModel) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
@@ -80,7 +76,7 @@ private fun ExpeditionDetailContent(expedition: Expedition) {
 
         DetailHero(
             emoji = "🛰️",
-            imageUrl = expedition.patchImageUrl,
+            imageUrl = expedition.imageUrl,
             modifier = Modifier.constrainAs(hero) {
                 top.linkTo(parent.top)
                 centerHorizontallyTo(parent)
@@ -100,7 +96,7 @@ private fun ExpeditionDetailContent(expedition: Expedition) {
         )
 
         InfoChip(
-            text = station,
+            text = expedition.stationName,
             modifier = Modifier.constrainAs(stationChip) {
                 top.linkTo(title.bottom, margin = 12.dp)
                 centerHorizontallyTo(parent)
@@ -119,12 +115,12 @@ private fun ExpeditionDetailContent(expedition: Expedition) {
                 },
         ) {
             StatBox(
-                value = "${expedition.crewCount} чел.",
+                value = expedition.crewCount,
                 label = "Экипаж",
                 modifier = Modifier.weight(1f),
             )
             StatBox(
-                value = expedition.patchCount.toString(),
+                value = expedition.patchCount,
                 label = "Эмблемы",
                 modifier = Modifier.weight(1f),
             )
@@ -173,10 +169,10 @@ private fun ExpeditionDetailContent(expedition: Expedition) {
             },
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                DetailField(label = "Станция", value = station)
-                DetailField(label = "Начало", value = formatIsoDate(expedition.start))
-                DetailField(label = "Конец", value = formatIsoDate(expedition.end, fallback = "идёт сейчас"))
-                DetailField(label = "Выходов в космос", value = expedition.spacewalkCount.toString())
+                DetailField(label = "Станция", value = expedition.stationName)
+                DetailField(label = "Начало", value = expedition.start)
+                DetailField(label = "Конец", value = expedition.end)
+                DetailField(label = "Выходов в космос", value = expedition.spacewalkCount)
                 DetailField(label = "Эмблема", value = expedition.patchName)
                 DetailField(
                     label = "Командир",

@@ -27,7 +27,7 @@ class SpaceRepositoryImpl @Inject constructor(
         suspend fun optionsFromAgencies() = agencies().mapNotNull { agency ->
             val id = agency.id
             val name = agency.name.takeIf(String::isNotBlank)
-            if (id == null || name == null) null else FilterOption(name, id.toString())
+            if (name == null) null else FilterOption(name, id.toString())
         }.distinctBy(FilterOption::value)
 
         return when (catalog) {

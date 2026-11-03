@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.domain.model.SpaceEvent
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.InfoChip
@@ -32,8 +31,6 @@ import com.example.android_development_practices.ui.common.SectionTitle
 import com.example.android_development_practices.ui.common.StatBox
 import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.ui.common.UiStateContent
-import com.example.android_development_practices.ui.common.formatIsoDate
-import com.example.android_development_practices.ui.common.formatIsoDuration
 import com.example.android_development_practices.ui.common.FavoriteAction
 
 @Composable
@@ -48,14 +45,14 @@ fun EventDetailRoute(
 
 @Composable
 private fun EventDetailScreen(
-    uiState: UiState<SpaceEvent>,
+    uiState: UiState<EventDetailUiModel>,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
     ScreenScaffold(title = "Детали события", onBack = onBack) { contentModifier ->
         UiStateContent(uiState = uiState, onRetry = onRetry, modifier = contentModifier) { event ->
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-                FavoriteAction(event)
+                FavoriteAction(event.source)
                 EventDetailContent(event = event)
             }
         }
@@ -63,7 +60,7 @@ private fun EventDetailScreen(
 }
 
 @Composable
-private fun EventDetailContent(event: SpaceEvent) {
+private fun EventDetailContent(event: EventDetailUiModel) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
@@ -123,16 +120,12 @@ private fun EventDetailContent(event: SpaceEvent) {
                 },
         ) {
             StatBox(
-                value = formatIsoDate(event.date, fallback = "—"),
+                value = event.date,
                 label = "Дата",
                 modifier = Modifier.weight(1f),
             )
             StatBox(
-                value = when {
-                    event.webcastLive == true -> "В эфире"
-                    event.videoUrl != null -> "Запись"
-                    else -> "—"
-                },
+                value = event.webcast,
                 label = "Трансляция",
                 modifier = Modifier.weight(1f),
             )
@@ -166,7 +159,7 @@ private fun EventDetailContent(event: SpaceEvent) {
         )
 
         Text(
-            text = event.description ?: "Описание события уточняется.",
+            text = event.description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.constrainAs(descText) {
@@ -196,11 +189,11 @@ private fun EventDetailContent(event: SpaceEvent) {
             },
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                DetailField(label = "Тип", value = event.typeName ?: "—")
-                DetailField(label = "Дата", value = formatIsoDate(event.date))
-                DetailField(label = "Место", value = event.location ?: "—")
-                DetailField(label = "Продолжительность", value = formatIsoDuration(event.duration))
-                DetailField(label = "Связанных запусков", value = event.launchCount.toString())
+                DetailField(label = "Тип", value = event.typeText)
+                DetailField(label = "Дата", value = event.fieldDate)
+                DetailField(label = "Место", value = event.location)
+                DetailField(label = "Продолжительность", value = event.duration)
+                DetailField(label = "Связанных запусков", value = event.launchCount)
             }
         }
     }

@@ -8,7 +8,6 @@ import com.example.android_development_practices.ui.common.ListItemCard
 import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.CatalogFilterDefinition
 import com.example.android_development_practices.ui.common.CatalogOption
-import com.example.android_development_practices.ui.common.upcomingYearOptions
 import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.domain.model.CatalogSettings
 
@@ -20,6 +19,7 @@ fun LaunchListRoute(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val settings by viewModel.settings.collectAsState()
+    val filterOptions by viewModel.filterOptions.collectAsState()
     LaunchListScreen(
         uiState = uiState,
         onBack = onBack,
@@ -27,7 +27,9 @@ fun LaunchListRoute(
         onRetry = viewModel::retry,
         onFiltersApplied = viewModel::applyFilters,
         initialSettings = settings,
-        onFilterOptionsChanged = viewModel::saveFilterOptions,
+        onOpenFilters = viewModel::loadFilterOptions,
+        filterOptions = filterOptions,
+        filterDefinitions = viewModel.filterDefinitions,
     )
 }
 
@@ -37,8 +39,10 @@ private fun LaunchListScreen(
     onBack: () -> Unit,
     onLaunchClick: (String) -> Unit,
     onRetry: () -> Unit,
-    initialSettings: CatalogSettings,
-    onFilterOptionsChanged: (Map<String, List<CatalogOption>>) -> Unit,
+    initialSettings: CatalogSettings?,
+    onOpenFilters: () -> Unit,
+    filterOptions: Map<String, List<CatalogOption>>,
+    filterDefinitions: List<CatalogFilterDefinition>,
     onFiltersApplied: (com.example.android_development_practices.ui.common.CatalogFilters) -> Unit,
 ) {
     ListScreenScaffold(
@@ -48,28 +52,11 @@ private fun LaunchListScreen(
         onRetry = onRetry,
         onFiltersApplied = onFiltersApplied,
         initialSettings = initialSettings,
-        onFilterOptionsChanged = onFilterOptionsChanged,
+        onOpenFilters = onOpenFilters,
         favoriteItem = { it.source },
         itemKey = { it.id },
-        filterDefinitions = listOf(
-            CatalogFilterDefinition("lsp__id", "Агентство") { launches ->
-                launches.mapNotNull { launch ->
-                    val id = launch.source.providerId ?: return@mapNotNull null
-                    val name = launch.source.providerName?.takeIf(String::isNotBlank) ?: return@mapNotNull null
-                    CatalogOption(name, id.toString())
-                }
-            },
-            CatalogFilterDefinition("year", "Год") { launches ->
-                upcomingYearOptions(launches.mapNotNull { it.source.net?.take(4)?.takeIf { year -> year.toIntOrNull() != null } })
-            },
-            CatalogFilterDefinition("status__ids", "Статус") { launches ->
-                launches.mapNotNull { launch ->
-                    val id = launch.source.statusId ?: return@mapNotNull null
-                    val name = launch.source.status?.takeIf(String::isNotBlank) ?: return@mapNotNull null
-                    CatalogOption(name, id.toString())
-                }
-            },
-        ),
+        filterDefinitions = filterDefinitions,
+        filterOptions = filterOptions,
     ) { launch, favorite, toggle ->
         LaunchListItem(launch = launch, onClick = { onLaunchClick(launch.id) }, favorite, toggle)
     }

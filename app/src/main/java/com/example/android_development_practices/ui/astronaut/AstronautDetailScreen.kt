@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.domain.model.Astronaut
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.InfoChip
@@ -30,8 +29,6 @@ import com.example.android_development_practices.ui.common.SectionTitle
 import com.example.android_development_practices.ui.common.StatBox
 import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.ui.common.UiStateContent
-import com.example.android_development_practices.ui.common.formatIsoDate
-import com.example.android_development_practices.ui.common.formatIsoDuration
 import com.example.android_development_practices.ui.common.FavoriteAction
 
 @Composable
@@ -46,14 +43,14 @@ fun AstronautDetailRoute(
 
 @Composable
 private fun AstronautDetailScreen(
-    uiState: UiState<Astronaut>,
+    uiState: UiState<AstronautDetailUiModel>,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
     ScreenScaffold(title = "Детали космонавта/астронавта", onBack = onBack) { contentModifier ->
         UiStateContent(uiState = uiState, onRetry = onRetry, modifier = contentModifier) { astronaut ->
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-                FavoriteAction(astronaut)
+                FavoriteAction(astronaut.source)
                 AstronautDetailContent(astronaut = astronaut)
             }
         }
@@ -61,13 +58,7 @@ private fun AstronautDetailScreen(
 }
 
 @Composable
-private fun AstronautDetailContent(astronaut: Astronaut) {
-    val initials = astronaut.name.split(" ")
-        .mapNotNull { it.firstOrNull()?.toString() }
-        .takeLast(2)
-        .joinToString("")
-        .ifBlank { "🧑‍🚀" }
-
+private fun AstronautDetailContent(astronaut: AstronautDetailUiModel) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
@@ -85,7 +76,7 @@ private fun AstronautDetailContent(astronaut: Astronaut) {
         val fieldsCard = createRef()
 
         DetailHero(
-            emoji = initials,
+            emoji = astronaut.heroFallback,
             imageUrl = astronaut.imageUrl,
             modifier = Modifier.constrainAs(hero) {
                 top.linkTo(parent.top)
@@ -106,7 +97,7 @@ private fun AstronautDetailContent(astronaut: Astronaut) {
         )
 
         InfoChip(
-            text = astronaut.agencyAbbreviation ?: astronaut.agencyName ?: "Агентство",
+            text = astronaut.agencyChip,
             modifier = Modifier.constrainAs(agencyChip) {
                 top.linkTo(title.bottom, margin = 12.dp)
                 centerHorizontallyTo(parent)
@@ -114,7 +105,7 @@ private fun AstronautDetailContent(astronaut: Astronaut) {
         )
 
         Text(
-            text = astronaut.statusName ?: "Статус уточняется",
+            text = astronaut.statusText,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.constrainAs(statusText) {
@@ -135,14 +126,14 @@ private fun AstronautDetailContent(astronaut: Astronaut) {
                 },
         ) {
             StatBox(
-                value = formatIsoDuration(astronaut.timeInSpace),
+                value = astronaut.timeInSpace,
                 label = "Время в космосе",
                 modifier = Modifier.weight(1f),
                 valueStyle = MaterialTheme.typography.titleSmall,
                 valueMaxLines = Int.MAX_VALUE,
             )
             StatBox(
-                value = formatIsoDuration(astronaut.evaTime),
+                value = astronaut.evaTime,
                 label = "Время EVA",
                 modifier = Modifier.weight(1f),
                 valueStyle = MaterialTheme.typography.titleSmall,
@@ -150,7 +141,7 @@ private fun AstronautDetailContent(astronaut: Astronaut) {
             )
         }
 
-        if (!astronaut.biography.isNullOrBlank()) {
+        if (astronaut.biography != null) {
             SectionTitle(
                 text = "Биография",
                 modifier = Modifier.constrainAs(bioTitle) {
@@ -175,7 +166,7 @@ private fun AstronautDetailContent(astronaut: Astronaut) {
             text = "Детали",
             modifier = Modifier.constrainAs(fieldsTitle) {
                 top.linkTo(
-                    if (astronaut.biography.isNullOrBlank()) statRow.bottom else bioText.bottom,
+                    if (astronaut.biography == null) statRow.bottom else bioText.bottom,
                     margin = 24.dp,
                 )
                 start.linkTo(parent.start)
@@ -195,16 +186,16 @@ private fun AstronautDetailContent(astronaut: Astronaut) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 DetailField(label = "Статус", value = astronaut.statusName)
                 DetailField(label = "Тип", value = astronaut.typeName)
-                DetailField(label = "Возраст", value = astronaut.age?.toString())
+                DetailField(label = "Возраст", value = astronaut.age)
                 DetailField(
                     label = "В космосе сейчас",
-                    value = astronaut.inSpace?.let { if (it) "Да" else "Нет" },
+                    value = astronaut.inSpace,
                 )
-                DetailField(label = "Гражданства", value = astronaut.nationalities.joinToString().takeIf { it.isNotBlank() })
-                DetailField(label = "Дата рождения", value = formatIsoDate(astronaut.birthDate))
-                DetailField(label = "Время в космосе", value = formatIsoDuration(astronaut.timeInSpace))
-                DetailField(label = "Время в EVA", value = formatIsoDuration(astronaut.evaTime))
-                DetailField(label = "Первый полёт", value = formatIsoDate(astronaut.firstFlight))
+                DetailField(label = "Гражданства", value = astronaut.nationalities)
+                DetailField(label = "Дата рождения", value = astronaut.birthDate)
+                DetailField(label = "Время в космосе", value = astronaut.timeInSpace)
+                DetailField(label = "Время в EVA", value = astronaut.evaTime)
+                DetailField(label = "Первый полёт", value = astronaut.firstFlight)
             }
         }
     }

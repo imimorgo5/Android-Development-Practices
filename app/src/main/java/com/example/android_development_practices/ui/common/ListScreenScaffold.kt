@@ -33,26 +33,30 @@ fun <T : Any> ListScreenScaffold(
     onFiltersApplied: (CatalogFilters) -> Unit,
     itemKey: (T) -> Any,
     favoriteItem: (T) -> FavoriteSource,
-    initialSettings: CatalogSettings,
-    onFilterOptionsChanged: (Map<String, List<CatalogOption>>) -> Unit,
-    filterDefinitions: List<CatalogFilterDefinition<T>> = emptyList(),
+    initialSettings: CatalogSettings?,
+    onOpenFilters: () -> Unit,
+    filterOptions: Map<String, List<CatalogOption>>,
+    filterDefinitions: List<CatalogFilterDefinition> = emptyList(),
     itemContent: @Composable (T, Boolean, () -> Unit) -> Unit,
 ) {
+    if (initialSettings == null) {
+        ScreenScaffold(title = title, onBack = onBack) { modifier ->
+            UiStateContent(uiState = uiState, onRetry = onRetry, modifier = modifier) {}
+        }
+        return
+    }
     val badgeViewModel: FilterBadgeViewModel = hiltViewModel()
     val badgeActive by badgeViewModel.cache.active.collectAsState()
-    val apiOptionsViewModel: ApiCatalogOptionsViewModel = hiltViewModel()
-    val apiOptions by apiOptionsViewModel.options.collectAsState()
     val initialFilters = initialSettings.filters
     var query by remember(title) { mutableStateOf(initialFilters.query) }
     var submittedQuery by remember(title) { mutableStateOf(query) }
     var selectedParams by remember(title) { mutableStateOf(initialFilters.params) }
     var draftParams by remember(title) { mutableStateOf(initialFilters.params) }
     var editing by remember(title) { mutableStateOf(false) }
-    var cachedOptions by remember(title) { mutableStateOf(initialSettings.options) }
 
     LaunchedEffect(query) {
+        delay(400)
         if (query != submittedQuery) {
-            delay(400)
             submittedQuery = query
             onFiltersApplied(CatalogFilters(query, selectedParams))
         }
@@ -77,7 +81,7 @@ fun <T : Any> ListScreenScaffold(
                         onFiltersApplied(CatalogFilters(query, selectedParams))
                     },
                     onOpenFilters = {
-                        apiOptionsViewModel.loadOptions(title.toCatalogKey())
+                        onOpenFilters()
                         draftParams = selectedParams.toMap()
                         editing = true
                     },
@@ -87,25 +91,10 @@ fun <T : Any> ListScreenScaffold(
                 val favoritesViewModel: FavoriteViewModel = hiltViewModel()
                 val favorites by favoritesViewModel.favorites.collectAsState()
                 val favoriteKeys = remember(favorites) { favorites.mapTo(mutableSetOf()) { it.key } }
-                val currentOptions = filterDefinitions.associate { definition ->
-                    val fromApiOptions = apiOptions[definition.key].orEmpty()
-                    val itemsOptions = definition.options(catalogItems)
-                    definition.key to (fromApiOptions.ifEmpty { itemsOptions })
-                        .distinctBy(CatalogOption::value).sortedBy(CatalogOption::label)
-                }
-                LaunchedEffect(currentOptions, query, selectedParams) {
-                    if (query.isBlank() && selectedParams.values.none(String::isNotBlank)) {
-                        cachedOptions = currentOptions
-                        onFilterOptionsChanged(currentOptions)
-                    }
-                }
-
                 if (editing) {
                     FilterSettingsContent(
                         definitions = filterDefinitions,
-                        options = currentOptions.mapValues { (key, value) ->
-                            apiOptions[key].orEmpty().ifEmpty { cachedOptions[key].orEmpty().ifEmpty { value } }
-                        },
+                        options = filterOptions,
                         values = draftParams,
                         onValueChange = { key, value -> draftParams = draftParams.toMutableMap().apply {
                             if (value.isBlank()) remove(key) else put(key, value)
@@ -141,13 +130,4 @@ fun <T : Any> ListScreenScaffold(
             }
         }
     }
-}
-
-private fun String.toCatalogKey(): String = when (this) {
-    "Ближайшие запуски" -> "launch"
-    "Ближайшие события" -> "event"
-    "Экспедиции" -> "expedition"
-    "Космические агентства" -> "agency"
-    "Космонавты и астронавты" -> "astronaut"
-    else -> ""
 }

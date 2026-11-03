@@ -1,5 +1,10 @@
 package com.example.android_development_practices.ui.launch
 
+import com.example.android_development_practices.ui.common.CatalogId
+import com.example.android_development_practices.ui.common.CatalogFilterSource
+import com.example.android_development_practices.ui.common.CatalogOption
+import com.example.android_development_practices.ui.common.upcomingYearOptions
+
 import androidx.lifecycle.SavedStateHandle
 import com.example.android_development_practices.domain.SpaceUseCases
 import com.example.android_development_practices.di.IoDispatcher
@@ -16,7 +21,28 @@ class LaunchListViewModel @Inject constructor(
     private val useCases: SpaceUseCases,
     @IoDispatcher dispatcher: CoroutineDispatcher,
     settingsUseCases: CatalogSettingsUseCases,
-) : BaseListViewModel<LaunchListItemUiModel>(dispatcher, settingsUseCases, "Ближайшие запуски") {
+) : BaseListViewModel<LaunchListItemUiModel>(dispatcher, settingsUseCases, CatalogId.LAUNCH, useCases) {
+    override val filterSources: List<CatalogFilterSource<LaunchListItemUiModel>> = listOf(
+        CatalogFilterSource("lsp__id", "Агентство") { launches ->
+            launches.mapNotNull { launch ->
+                val id = launch.source.providerId ?: return@mapNotNull null
+                val name = launch.source.providerName?.takeIf(String::isNotBlank) ?: return@mapNotNull null
+                CatalogOption(name, id.toString())
+            }
+        },
+        CatalogFilterSource("year", "Год") { launches ->
+            upcomingYearOptions(launches.mapNotNull { it.source.net?.take(4)?.takeIf { year -> year.toIntOrNull() != null } })
+        },
+        CatalogFilterSource("status__ids", "Статус") { launches ->
+            launches.mapNotNull { launch ->
+                val id = launch.source.statusId ?: return@mapNotNull null
+                val name = launch.source.status?.takeIf(String::isNotBlank) ?: return@mapNotNull null
+                CatalogOption(name, id.toString())
+            }
+        },
+    )
+
+    init { retry() }
 
     override suspend fun loadData(filters: CatalogFilters): List<LaunchListItemUiModel> = useCases.upcomingLaunches(
         filters.apiSearch,
@@ -35,5 +61,7 @@ class LaunchDetailViewModel @Inject constructor(
     argId = checkNotNull(savedStateHandle["id"]),
     ioDispatcher = dispatcher,
 ) {
+    init { retry() }
+
     override suspend fun loadData(id: String): LaunchDetailUiModel = useCases.launch(id).toDetailUiModel()
 }

@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.domain.model.Agency
 import com.example.android_development_practices.ui.common.ListItemCard
 import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.CatalogFilterDefinition
@@ -20,6 +19,7 @@ fun AgencyListRoute(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val settings by viewModel.settings.collectAsState()
+    val filterOptions by viewModel.filterOptions.collectAsState()
     AgencyListScreen(
         uiState = uiState,
         onBack = onBack,
@@ -27,18 +27,22 @@ fun AgencyListRoute(
         onRetry = viewModel::retry,
         onFiltersApplied = viewModel::applyFilters,
         initialSettings = settings,
-        onFilterOptionsChanged = viewModel::saveFilterOptions,
+        onOpenFilters = viewModel::loadFilterOptions,
+        filterOptions = filterOptions,
+        filterDefinitions = viewModel.filterDefinitions,
     )
 }
 
 @Composable
 private fun AgencyListScreen(
-    uiState: UiState<List<Agency>>,
+    uiState: UiState<List<AgencyListItemUiModel>>,
     onBack: () -> Unit,
     onAgencyClick: (Int) -> Unit,
     onRetry: () -> Unit,
-    initialSettings: CatalogSettings,
-    onFilterOptionsChanged: (Map<String, List<CatalogOption>>) -> Unit,
+    initialSettings: CatalogSettings?,
+    onOpenFilters: () -> Unit,
+    filterOptions: Map<String, List<CatalogOption>>,
+    filterDefinitions: List<CatalogFilterDefinition>,
     onFiltersApplied: (com.example.android_development_practices.ui.common.CatalogFilters) -> Unit,
 ) {
     ListScreenScaffold(
@@ -48,37 +52,23 @@ private fun AgencyListScreen(
         onRetry = onRetry,
         onFiltersApplied = onFiltersApplied,
         initialSettings = initialSettings,
-        onFilterOptionsChanged = onFilterOptionsChanged,
-        favoriteItem = { it },
+        onOpenFilters = onOpenFilters,
+        favoriteItem = { it.source },
         itemKey = { it.id },
-        filterDefinitions = listOf(
-            CatalogFilterDefinition("country_code", "Страна") { agencies ->
-                agencies.flatMap { agency -> agency.countryFilterValues.map { CatalogOption(it.name, it.alpha3Code) } }
-            },
-            CatalogFilterDefinition("type__id", "Тип агентства") { agencies ->
-                agencies.mapNotNull { agency ->
-                    val id = agency.typeId ?: return@mapNotNull null
-                    val name = agency.typeName?.takeIf(String::isNotBlank) ?: return@mapNotNull null
-                    CatalogOption(name, id.toString())
-                }
-            },
-        ),
+        filterDefinitions = filterDefinitions,
+        filterOptions = filterOptions,
     ) { agency, favorite, toggle ->
         AgencyListItem(agency = agency, onClick = { onAgencyClick(agency.id) }, favorite, toggle)
     }
 }
 
 @Composable
-private fun AgencyListItem(agency: Agency, onClick: () -> Unit, favorite: Boolean, toggle: () -> Unit) {
-    val abbrev = agency.abbreviation ?: agency.name.take(3)
-    val country = agency.countries.joinToString().ifBlank { "—" }
-    val type = agency.typeName ?: "агентство"
-
+private fun AgencyListItem(agency: AgencyListItemUiModel, onClick: () -> Unit, favorite: Boolean, toggle: () -> Unit) {
     ListItemCard(
         thumbnailUrl = agency.imageUrl,
-        thumbnailFallback = abbrev,
+        thumbnailFallback = agency.thumbnailFallback,
         title = agency.name,
-        subtitle = "$country · $type",
+        subtitle = agency.subtitle,
         onClick = onClick,
         isFavorite = favorite,
         onFavoriteClick = toggle,
