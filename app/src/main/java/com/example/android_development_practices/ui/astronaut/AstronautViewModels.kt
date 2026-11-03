@@ -1,10 +1,7 @@
 package com.example.android_development_practices.ui.astronaut
 
 import androidx.lifecycle.SavedStateHandle
-import android.content.Context
-import dagger.hilt.android.qualifiers.ApplicationContext
 import com.example.android_development_practices.domain.model.Astronaut
-import com.example.android_development_practices.data.local.FavoriteDetailsCache
 import com.example.android_development_practices.domain.SpaceUseCases
 import com.example.android_development_practices.di.IoDispatcher
 import com.example.android_development_practices.ui.common.BaseDetailViewModel
@@ -13,13 +10,14 @@ import com.example.android_development_practices.ui.common.CatalogFilters
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
+import com.example.android_development_practices.domain.CatalogSettingsUseCases
 
 @HiltViewModel
 class AstronautListViewModel @Inject constructor(
     private val useCases: SpaceUseCases,
     @IoDispatcher dispatcher: CoroutineDispatcher,
-    @ApplicationContext context: Context,
-) : BaseListViewModel<Astronaut>(dispatcher, CatalogFilters.load(context, "Космонавты и астронавты")) {
+    settingsUseCases: CatalogSettingsUseCases,
+) : BaseListViewModel<Astronaut>(dispatcher, settingsUseCases, "Космонавты и астронавты") {
 
     override suspend fun loadData(filters: CatalogFilters): List<Astronaut> = useCases.astronauts(
         filters.apiSearch,
@@ -33,12 +31,11 @@ class AstronautListViewModel @Inject constructor(
 class AstronautDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val useCases: SpaceUseCases,
-    private val detailsCache: FavoriteDetailsCache,
     @IoDispatcher dispatcher: CoroutineDispatcher,
 ) : BaseDetailViewModel<Astronaut>(
     argId = checkNotNull(savedStateHandle["id"]),
     ioDispatcher = dispatcher,
 ) {
     override suspend fun loadData(id: String): Astronaut =
-        detailsCache.load("astronaut", id, Astronaut.serializer()) { useCases.astronaut(id.toInt()) }
+        useCases.astronaut(id.toInt())
 }

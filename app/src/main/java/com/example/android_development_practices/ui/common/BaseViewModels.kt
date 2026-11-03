@@ -14,16 +14,20 @@ import kotlinx.coroutines.CancellationException
 import java.io.IOException
 import retrofit2.HttpException
 import kotlinx.serialization.SerializationException
+import com.example.android_development_practices.domain.CatalogSettingsUseCases
 
 abstract class BaseListViewModel<T>(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
-    initialFilters: CatalogFilters = CatalogFilters(),
+    private val settingsUseCases: CatalogSettingsUseCases,
+    private val catalog: String,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<List<T>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<T>>> = _uiState.asStateFlow()
 
-    private var currentFilters = initialFilters
+    private val _settings = MutableStateFlow(settingsUseCases.load(catalog))
+    val settings = _settings.asStateFlow()
+    private var currentFilters = _settings.value.filters
     private var loadJob: Job? = null
 
     init {
@@ -35,8 +39,15 @@ abstract class BaseListViewModel<T>(
     fun retry() = load(currentFilters)
 
     fun applyFilters(filters: CatalogFilters) {
+        settingsUseCases.saveFilters(catalog, filters)
+        _settings.value = _settings.value.copy(filters = filters)
         currentFilters = filters
         load(filters)
+    }
+
+    fun saveFilterOptions(options: Map<String, List<CatalogOption>>) {
+        settingsUseCases.saveOptions(catalog, options)
+        _settings.value = _settings.value.copy(options = options)
     }
 
     private fun load(filters: CatalogFilters) {

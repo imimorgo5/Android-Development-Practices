@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
+import com.example.android_development_practices.domain.model.FavoriteSource
 
 @Composable
 fun ListThumbnail(
@@ -129,13 +130,12 @@ fun ListItemCard(
 }
 
 @Composable
-fun FavoriteAction(item: Any, modifier: Modifier = Modifier) {
+fun FavoriteAction(item: FavoriteSource, modifier: Modifier = Modifier) {
     val viewModel: FavoriteViewModel = hiltViewModel()
     val favorites by viewModel.favorites.collectAsState()
-    val snapshot = favoriteSnapshot(item)
-    val saved = favorites.any { it.key == snapshot.key }
+    val saved = favorites.any { it.key == viewModel.key(item) }
     Row(modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End) {
-        IconButton(onClick = { viewModel.toggle(snapshot) }) {
+        IconButton(onClick = { viewModel.toggle(item) }) {
             Icon(
                 if (saved) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                 if (saved) "Убрать из избранного" else "В избранное",

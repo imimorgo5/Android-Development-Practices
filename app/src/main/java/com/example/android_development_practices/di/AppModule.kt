@@ -23,10 +23,24 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import com.example.android_development_practices.data.repository.CatalogSettingsRepositoryImpl
+import com.example.android_development_practices.data.repository.FavoritesRepositoryImpl
+import com.example.android_development_practices.domain.repository.CatalogSettingsRepository
+import com.example.android_development_practices.domain.repository.FavoritesRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+    @Provides
+    @Singleton
+    fun provideCatalogSettingsRepository(repository: CatalogSettingsRepositoryImpl):
+        CatalogSettingsRepository = repository
+
+    @Provides
+    @Singleton
+    fun provideFavoritesRepository(repository: FavoritesRepositoryImpl):
+        FavoritesRepository = repository
+
     @Provides
     @Singleton
     fun provideProfileRepository(repository: com.example.android_development_practices.data.profile.LocalProfileRepository):
@@ -64,7 +78,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSpaceRepository(api: SpaceApi): SpaceRepository = SpaceRepositoryImpl(api)
+    fun provideSpaceRepository(repository: SpaceRepositoryImpl): SpaceRepository = repository
 
     @Provides
     @Singleton

@@ -10,6 +10,7 @@ import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.CatalogFilterDefinition
 import com.example.android_development_practices.ui.common.CatalogOption
 import com.example.android_development_practices.ui.common.UiState
+import com.example.android_development_practices.domain.model.CatalogSettings
 
 @Composable
 fun AstronautListRoute(
@@ -18,12 +19,15 @@ fun AstronautListRoute(
     viewModel: AstronautListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val settings by viewModel.settings.collectAsState()
     AstronautListScreen(
         uiState = uiState,
         onBack = onBack,
         onAstronautClick = onAstronautClick,
         onRetry = viewModel::retry,
         onFiltersApplied = viewModel::applyFilters,
+        initialSettings = settings,
+        onFilterOptionsChanged = viewModel::saveFilterOptions,
     )
 }
 
@@ -33,6 +37,8 @@ private fun AstronautListScreen(
     onBack: () -> Unit,
     onAstronautClick: (Int) -> Unit,
     onRetry: () -> Unit,
+    initialSettings: CatalogSettings,
+    onFilterOptionsChanged: (Map<String, List<CatalogOption>>) -> Unit,
     onFiltersApplied: (com.example.android_development_practices.ui.common.CatalogFilters) -> Unit,
 ) {
     ListScreenScaffold(
@@ -41,6 +47,9 @@ private fun AstronautListScreen(
         uiState = uiState,
         onRetry = onRetry,
         onFiltersApplied = onFiltersApplied,
+        initialSettings = initialSettings,
+        onFilterOptionsChanged = onFilterOptionsChanged,
+        favoriteItem = { it },
         itemKey = { it.id },
         filterDefinitions = listOf(
             CatalogFilterDefinition("nationality", "Национальность") { astronauts ->

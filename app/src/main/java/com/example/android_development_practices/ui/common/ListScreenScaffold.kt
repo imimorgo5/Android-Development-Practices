@@ -17,11 +17,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.delay
+import com.example.android_development_practices.domain.model.CatalogSettings
+import com.example.android_development_practices.domain.model.FavoriteSource
 
 @Composable
 fun <T : Any> ListScreenScaffold(
@@ -31,6 +32,9 @@ fun <T : Any> ListScreenScaffold(
     onRetry: () -> Unit,
     onFiltersApplied: (CatalogFilters) -> Unit,
     itemKey: (T) -> Any,
+    favoriteItem: (T) -> FavoriteSource,
+    initialSettings: CatalogSettings,
+    onFilterOptionsChanged: (Map<String, List<CatalogOption>>) -> Unit,
     filterDefinitions: List<CatalogFilterDefinition<T>> = emptyList(),
     itemContent: @Composable (T, Boolean, () -> Unit) -> Unit,
 ) {
@@ -38,16 +42,13 @@ fun <T : Any> ListScreenScaffold(
     val badgeActive by badgeViewModel.cache.active.collectAsState()
     val apiOptionsViewModel: ApiCatalogOptionsViewModel = hiltViewModel()
     val apiOptions by apiOptionsViewModel.options.collectAsState()
-    val context = LocalContext.current
-    val preferences = remember(context) { context.getSharedPreferences("list_filters", 0) }
-    val store = remember(preferences, title) { CatalogFilterStore(preferences, title) }
-    val initialFilters = remember(title, preferences) { CatalogFilters.load(context, title) }
+    val initialFilters = initialSettings.filters
     var query by remember(title) { mutableStateOf(initialFilters.query) }
     var submittedQuery by remember(title) { mutableStateOf(query) }
     var selectedParams by remember(title) { mutableStateOf(initialFilters.params) }
     var draftParams by remember(title) { mutableStateOf(initialFilters.params) }
     var editing by remember(title) { mutableStateOf(false) }
-    var cachedOptions by remember(title, preferences) { mutableStateOf(store.loadOptions()) }
+    var cachedOptions by remember(title) { mutableStateOf(initialSettings.options) }
 
     LaunchedEffect(query) {
         if (query != submittedQuery) {
@@ -70,7 +71,6 @@ fun <T : Any> ListScreenScaffold(
                     badgeActive = badgeActive,
                     onQueryChange = {
                         query = it
-                        store.saveQuery(it)
                     },
                     onSearch = {
                         submittedQuery = query
@@ -96,7 +96,7 @@ fun <T : Any> ListScreenScaffold(
                 LaunchedEffect(currentOptions, query, selectedParams) {
                     if (query.isBlank() && selectedParams.values.none(String::isNotBlank)) {
                         cachedOptions = currentOptions
-                        store.saveOptions(currentOptions)
+                        onFilterOptionsChanged(currentOptions)
                     }
                 }
 
@@ -113,14 +113,12 @@ fun <T : Any> ListScreenScaffold(
                         onReset = {
                             draftParams = emptyMap()
                             selectedParams = emptyMap()
-                            store.saveFilters(emptyMap())
                             editing = false
                             submittedQuery = query
                             onFiltersApplied(CatalogFilters(query))
                         },
                         onApply = {
                             selectedParams = draftParams.filterValues(String::isNotBlank)
-                            store.saveFilters(selectedParams)
                             editing = false
                             submittedQuery = query
                             onFiltersApplied(CatalogFilters(query, selectedParams))
@@ -135,8 +133,8 @@ fun <T : Any> ListScreenScaffold(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(items = catalogItems, key = itemKey) { item ->
-                            val favorite = favoriteSnapshot(item)
-                            itemContent(item, favorite.key in favoriteKeys) { favoritesViewModel.toggle(favorite) }
+                            val favorite = favoriteItem(item)
+                            itemContent(item, favoritesViewModel.key(favorite) in favoriteKeys) { favoritesViewModel.toggle(favorite) }
                         }
                     }
                 }

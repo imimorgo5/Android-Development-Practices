@@ -11,6 +11,7 @@ import com.example.android_development_practices.ui.common.CatalogFilterDefiniti
 import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.ui.common.formatIsoDate
+import com.example.android_development_practices.domain.model.CatalogSettings
 
 @Composable
 fun ExpeditionListRoute(
@@ -19,12 +20,15 @@ fun ExpeditionListRoute(
     viewModel: ExpeditionListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val settings by viewModel.settings.collectAsState()
     ExpeditionListScreen(
         uiState = uiState,
         onBack = onBack,
         onExpeditionClick = onExpeditionClick,
         onRetry = viewModel::retry,
         onFiltersApplied = viewModel::applyFilters,
+        initialSettings = settings,
+        onFilterOptionsChanged = viewModel::saveFilterOptions,
     )
 }
 
@@ -34,6 +38,8 @@ private fun ExpeditionListScreen(
     onBack: () -> Unit,
     onExpeditionClick: (Int) -> Unit,
     onRetry: () -> Unit,
+    initialSettings: CatalogSettings,
+    onFilterOptionsChanged: (Map<String, List<CatalogOption>>) -> Unit,
     onFiltersApplied: (com.example.android_development_practices.ui.common.CatalogFilters) -> Unit,
 ) {
     ListScreenScaffold(
@@ -42,6 +48,9 @@ private fun ExpeditionListScreen(
         uiState = uiState,
         onRetry = onRetry,
         onFiltersApplied = onFiltersApplied,
+        initialSettings = initialSettings,
+        onFilterOptionsChanged = onFilterOptionsChanged,
+        favoriteItem = { it },
         itemKey = { it.id },
         filterDefinitions = listOf(
             CatalogFilterDefinition("crew__astronaut__agency", "Агентство") { emptyList() },

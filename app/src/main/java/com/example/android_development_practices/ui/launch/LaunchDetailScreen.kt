@@ -4,11 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -23,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.domain.model.Launch
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.InfoChip
@@ -32,7 +29,6 @@ import com.example.android_development_practices.ui.common.SectionTitle
 import com.example.android_development_practices.ui.common.StatBox
 import com.example.android_development_practices.ui.common.UiState
 import com.example.android_development_practices.ui.common.UiStateContent
-import com.example.android_development_practices.ui.common.formatIsoDate
 import com.example.android_development_practices.ui.common.FavoriteAction
 
 @Composable
@@ -47,14 +43,14 @@ fun LaunchDetailRoute(
 
 @Composable
 private fun LaunchDetailScreen(
-    uiState: UiState<Launch>,
+    uiState: UiState<LaunchDetailUiModel>,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
     ScreenScaffold(title = "Детали запуска", onBack = onBack) { contentModifier ->
         UiStateContent(uiState = uiState, onRetry = onRetry, modifier = contentModifier) { launch ->
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-                FavoriteAction(launch)
+                FavoriteAction(launch.source)
                 LaunchDetailContent(launch = launch)
             }
         }
@@ -62,13 +58,7 @@ private fun LaunchDetailScreen(
 }
 
 @Composable
-private fun LaunchDetailContent(launch: Launch) {
-    val rocketFamily = launch.rocketFamily ?: "🚀"
-    val provider = launch.providerName ?: "—"
-    val missionName = launch.missionName ?: "—"
-    val orbit = launch.orbitName ?: "—"
-    val window = launch.windowStart?.let { formatIsoDate(it) } ?: "—"
-
+private fun LaunchDetailContent(launch: LaunchDetailUiModel) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
@@ -85,7 +75,7 @@ private fun LaunchDetailContent(launch: Launch) {
         val fieldsCard = createRef()
 
         DetailHero(
-            emoji = rocketFamily,
+            emoji = launch.rocketFamily,
             imageUrl = launch.imageUrl,
             modifier = Modifier.constrainAs(hero) {
                 top.linkTo(parent.top)
@@ -105,9 +95,8 @@ private fun LaunchDetailContent(launch: Launch) {
             },
         )
 
-        val statusText = launch.status ?: "Статус уточняется"
         InfoChip(
-            text = statusText,
+            text = launch.status,
             modifier = Modifier.constrainAs(statusChip) {
                 top.linkTo(title.bottom, margin = 12.dp)
                 centerHorizontallyTo(parent)
@@ -126,12 +115,12 @@ private fun LaunchDetailContent(launch: Launch) {
                 },
         ) {
             StatBox(
-                value = formatIsoDate(launch.net, fallback = "—"),
+                value = launch.launchDate,
                 label = "Дата старта",
                 modifier = Modifier.weight(1f),
             )
             StatBox(
-                value = launch.rocketLaunchCount?.toString() ?: "—",
+                value = launch.rocketLaunchCount,
                 label = "Запусков модели ракеты",
                 modifier = Modifier.weight(1f),
             )
@@ -146,7 +135,7 @@ private fun LaunchDetailContent(launch: Launch) {
         )
 
         Text(
-            text = launch.missionDescription ?: "Описание миссии уточняется.",
+            text = launch.description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.constrainAs(descText) {
@@ -176,18 +165,15 @@ private fun LaunchDetailContent(launch: Launch) {
             },
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                DetailField(label = "Организация", value = provider)
-                DetailField(label = "Ракета", value = launch.rocketName ?: "—")
-                DetailField(label = "Миссия", value = missionName)
-                DetailField(label = "Орбита", value = orbit)
+                DetailField(label = "Организация", value = launch.provider)
+                DetailField(label = "Ракета", value = launch.rocket)
+                DetailField(label = "Миссия", value = launch.mission)
+                DetailField(label = "Орбита", value = launch.orbit)
                 DetailField(
                     label = "Площадка",
-                    value = buildList {
-                        launch.padName?.let { add(it) }
-                        launch.padLocationName?.let { add(it) }
-                    }.joinToString(" · ").ifBlank { "—" },
+                    value = launch.pad,
                 )
-                DetailField(label = "Окно запуска", value = window)
+                DetailField(label = "Окно запуска", value = launch.window)
             }
         }
     }
