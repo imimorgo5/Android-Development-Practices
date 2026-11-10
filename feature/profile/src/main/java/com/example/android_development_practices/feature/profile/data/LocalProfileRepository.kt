@@ -1,12 +1,12 @@
-package com.example.android_development_practices.data.profile
+package com.example.android_development_practices.feature.profile.data
 
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.AtomicFile
 import androidx.core.content.FileProvider
-import com.example.android_development_practices.di.IoDispatcher
-import com.example.android_development_practices.domain.profile.*
+import com.example.android_development_practices.feature.profile.di.ProfileIoDispatcher
+import com.example.android_development_practices.feature.profile.domain.*
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.IOException
@@ -31,7 +31,6 @@ import okhttp3.Request
 @Serializable
 private data class StoredProfile(
     val fullName: String = "", val avatarUri: String? = null,
-    // Preserve the keys of profiles saved by earlier app versions.
     @SerialName("resumeUrl") val portfolioUrl: String = "",
     @SerialName("occupation") val displayName: String = "",
     val favoriteClassTime: String = "",
@@ -40,7 +39,7 @@ private data class StoredProfile(
 @Singleton
 class LocalProfileRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    @param:IoDispatcher private val io: CoroutineDispatcher,
+    @param:ProfileIoDispatcher private val io: CoroutineDispatcher,
 ) : ProfileRepository {
     private val state = MutableStateFlow<Profile?>(null)
     override val profile = state.filterNotNull()

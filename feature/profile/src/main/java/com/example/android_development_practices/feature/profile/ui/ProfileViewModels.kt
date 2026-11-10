@@ -1,9 +1,9 @@
-package com.example.android_development_practices.ui.profile
+package com.example.android_development_practices.feature.profile.ui
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.android_development_practices.domain.profile.*
+import com.example.android_development_practices.feature.profile.domain.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.IOException
 import javax.inject.Inject

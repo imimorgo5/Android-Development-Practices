@@ -1,4 +1,4 @@
-package com.example.android_development_practices.ui.common
+package com.example.android_development_practices.core.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize

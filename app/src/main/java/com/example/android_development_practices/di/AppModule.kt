@@ -32,15 +32,6 @@ import com.example.android_development_practices.domain.repository.FavoritesRepo
 @InstallIn(SingletonComponent::class)
 object AppModule {
     @Provides
-    fun provideReminderClock(): com.example.android_development_practices.domain.profile.ReminderClock =
-        com.example.android_development_practices.domain.profile.ReminderClock { System.currentTimeMillis() }
-
-    @Provides
-    @Singleton
-    fun provideClassReminderScheduler(scheduler: com.example.android_development_practices.data.reminder.AndroidClassReminderScheduler):
-        com.example.android_development_practices.domain.profile.ClassReminderScheduler = scheduler
-
-    @Provides
     @Singleton
     fun provideCatalogSettingsRepository(repository: CatalogSettingsRepositoryImpl):
         CatalogSettingsRepository = repository
@@ -49,12 +40,6 @@ object AppModule {
     @Singleton
     fun provideFavoritesRepository(repository: FavoritesRepositoryImpl):
         FavoritesRepository = repository
-
-    @Provides
-    @Singleton
-    fun provideProfileRepository(repository: com.example.android_development_practices.data.profile.LocalProfileRepository):
-        com.example.android_development_practices.domain.profile.ProfileRepository = repository
-
 
     @Provides
     @Singleton

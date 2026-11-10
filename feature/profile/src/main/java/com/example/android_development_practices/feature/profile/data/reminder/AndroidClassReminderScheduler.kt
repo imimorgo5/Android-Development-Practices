@@ -1,4 +1,4 @@
-package com.example.android_development_practices.data.reminder
+package com.example.android_development_practices.feature.profile.data.reminder
 
 import android.Manifest
 import android.app.AlarmManager
@@ -9,10 +9,10 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.example.android_development_practices.domain.profile.ClassReminder
-import com.example.android_development_practices.domain.profile.ClassReminderScheduler
-import com.example.android_development_practices.domain.profile.ReminderAccess
-import com.example.android_development_practices.domain.profile.ReminderPermissionException
+import com.example.android_development_practices.feature.profile.domain.ClassReminder
+import com.example.android_development_practices.feature.profile.domain.ClassReminderScheduler
+import com.example.android_development_practices.feature.profile.domain.ReminderAccess
+import com.example.android_development_practices.feature.profile.domain.ReminderPermissionException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton

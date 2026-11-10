@@ -1,4 +1,4 @@
-package com.example.android_development_practices.domain.profile
+package com.example.android_development_practices.feature.profile.domain
 
 import java.net.URI
 import javax.inject.Inject
@@ -87,7 +87,6 @@ class SaveProfile @Inject constructor(
         val prepared = prepare(profile)
         val access = reminders.access()
         if (access != ReminderAccess.READY) throw ReminderPermissionException(access)
-        // Once persistence starts, finish scheduling even if the editor is destroyed.
         withContext(NonCancellable) {
             repository.save(prepared.profile)
             try {

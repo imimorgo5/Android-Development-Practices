@@ -10,8 +10,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
-import com.example.android_development_practices.ui.profile.ProfileRoute
-import com.example.android_development_practices.ui.profile.EditProfileRoute
+import com.example.android_development_practices.feature.profile.ui.ProfileRoute
+import com.example.android_development_practices.feature.profile.ui.EditProfileRoute
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon

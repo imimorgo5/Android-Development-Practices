@@ -1,9 +1,9 @@
-package com.example.android_development_practices.ui.profile
+package com.example.android_development_practices.feature.profile.ui
 
-import com.example.android_development_practices.domain.profile.Profile
-import com.example.android_development_practices.domain.profile.ProfileValidationError
-import com.example.android_development_practices.domain.profile.ReminderAccess
-import com.example.android_development_practices.domain.profile.classTimeError
+import com.example.android_development_practices.feature.profile.domain.Profile
+import com.example.android_development_practices.feature.profile.domain.ProfileValidationError
+import com.example.android_development_practices.feature.profile.domain.ReminderAccess
+import com.example.android_development_practices.feature.profile.domain.classTimeError
 
 data class ProfileUiModel(
     val fullName: String,
