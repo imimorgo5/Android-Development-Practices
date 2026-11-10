@@ -1,5 +1,6 @@
 package com.example.android_development_practices.data.repository
 
+import com.example.android_development_practices.data.local.FavoriteDetailsCache
 import com.example.android_development_practices.data.mapper.toDomain
 import com.example.android_development_practices.data.model.dto.PaginatedResponse
 import com.example.android_development_practices.data.remote.SpaceApi
@@ -16,14 +17,17 @@ import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
 
-class SpaceRepositoryImpl @Inject constructor(private val api: SpaceApi) : SpaceRepository {
+class SpaceRepositoryImpl @Inject constructor(
+    private val api: SpaceApi,
+    private val detailsCache: FavoriteDetailsCache,
+) : SpaceRepository {
     override suspend fun getFilterOptions(catalog: String): Map<String, List<FilterOption>> {
         suspend fun <T> pages(request: suspend (Int, Int) -> PaginatedResponse<T>): List<T> = fetchAllPages(request)
         suspend fun agencies() = pages { offset, limit -> api.agencies(offset = offset, limit = limit) }
         suspend fun optionsFromAgencies() = agencies().mapNotNull { agency ->
             val id = agency.id
             val name = agency.name.takeIf(String::isNotBlank)
-            if (id == null || name == null) null else FilterOption(name, id.toString())
+            if (name == null) null else FilterOption(name, id.toString())
         }.distinctBy(FilterOption::value)
 
         return when (catalog) {
@@ -74,7 +78,8 @@ class SpaceRepositoryImpl @Inject constructor(private val api: SpaceApi) : Space
     override suspend fun getUpcomingLaunches(search: String?, agencyId: Int?, year: Int?, statusId: Int?) = fetchAllPages { offset, limit ->
         api.upcomingLaunches(search = search, agencyId = agencyId, year = year, statusId = statusId, offset = offset, limit = limit)
     }.map { it.toDomain() }
-    override suspend fun getLaunchDetail(id: String) = api.launch(id).toDomain()
+    override suspend fun getLaunchDetail(id: String) =
+        detailsCache.load("launch", id, Launch.serializer()) { api.launch(id).toDomain() }
     override suspend fun getUpcomingEvents(search: String?, agencyId: Int?, year: Int?, typeId: Int?) =
         fetchAllPages { offset, limit ->
             api.upcomingEvents(
@@ -89,7 +94,8 @@ class SpaceRepositoryImpl @Inject constructor(private val api: SpaceApi) : Space
                 }.format(Date()),
             )
         }.map { it.toDomain() }
-    override suspend fun getEventDetail(id: Int) = api.event(id).toDomain()
+    override suspend fun getEventDetail(id: Int) =
+        detailsCache.load("event", id.toString(), SpaceEvent.serializer()) { api.event(id).toDomain() }
     override suspend fun getExpeditions(search: String?, agencyId: Int?, startGte: String?, endLte: String?, stationId: Int?) =
         fetchAllPages { offset, limit ->
             api.expeditions(
@@ -97,17 +103,20 @@ class SpaceRepositoryImpl @Inject constructor(private val api: SpaceApi) : Space
                 stationId = stationId, offset = offset, limit = limit,
             )
         }.distinctBy { it.id }.map { it.toDomain() }
-    override suspend fun getExpeditionDetail(id: Int) = api.expedition(id).toDomain()
+    override suspend fun getExpeditionDetail(id: Int) =
+        detailsCache.load("expedition", id.toString(), Expedition.serializer()) { api.expedition(id).toDomain() }
     override suspend fun getAgencies(search: String?, countryCode: String?, typeId: Int?): List<Agency> {
         return fetchAllPages { offset, limit ->
             api.agencies(limit = limit, offset = offset, search = search, countryCode = countryCode, typeId = typeId)
         }.map { it.toDomain() }
     }
-    override suspend fun getAgencyDetail(id: Int) = api.agency(id).toDomain()
+    override suspend fun getAgencyDetail(id: Int) =
+        detailsCache.load("agency", id.toString(), Agency.serializer()) { api.agency(id).toDomain() }
     override suspend fun getAstronauts(search: String?, nationality: String?, agencyId: Int?, statusId: Int?) = fetchAllPages { offset, limit ->
         api.astronauts(search = search, nationality = nationality, agencyId = agencyId, statusId = statusId, offset = offset, limit = limit)
     }.map { it.toDomain() }
-    override suspend fun getAstronautDetail(id: Int) = api.astronaut(id).toDomain()
+    override suspend fun getAstronautDetail(id: Int) =
+        detailsCache.load("astronaut", id.toString(), Astronaut.serializer()) { api.astronaut(id).toDomain() }
 
     private suspend fun <T> fetchAllPages(
         pageRequest: suspend (offset: Int, limit: Int) -> PaginatedResponse<T>,

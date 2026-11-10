@@ -4,12 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.domain.model.Astronaut
 import com.example.android_development_practices.ui.common.ListItemCard
 import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.CatalogFilterDefinition
 import com.example.android_development_practices.ui.common.CatalogOption
 import com.example.android_development_practices.ui.common.UiState
+import com.example.android_development_practices.domain.model.CatalogSettings
 
 @Composable
 fun AstronautListRoute(
@@ -18,21 +18,31 @@ fun AstronautListRoute(
     viewModel: AstronautListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val settings by viewModel.settings.collectAsState()
+    val filterOptions by viewModel.filterOptions.collectAsState()
     AstronautListScreen(
         uiState = uiState,
         onBack = onBack,
         onAstronautClick = onAstronautClick,
         onRetry = viewModel::retry,
         onFiltersApplied = viewModel::applyFilters,
+        initialSettings = settings,
+        onOpenFilters = viewModel::loadFilterOptions,
+        filterOptions = filterOptions,
+        filterDefinitions = viewModel.filterDefinitions,
     )
 }
 
 @Composable
 private fun AstronautListScreen(
-    uiState: UiState<List<Astronaut>>,
+    uiState: UiState<List<AstronautListItemUiModel>>,
     onBack: () -> Unit,
     onAstronautClick: (Int) -> Unit,
     onRetry: () -> Unit,
+    initialSettings: CatalogSettings?,
+    onOpenFilters: () -> Unit,
+    filterOptions: Map<String, List<CatalogOption>>,
+    filterDefinitions: List<CatalogFilterDefinition>,
     onFiltersApplied: (com.example.android_development_practices.ui.common.CatalogFilters) -> Unit,
 ) {
     ListScreenScaffold(
@@ -41,49 +51,24 @@ private fun AstronautListScreen(
         uiState = uiState,
         onRetry = onRetry,
         onFiltersApplied = onFiltersApplied,
+        initialSettings = initialSettings,
+        onOpenFilters = onOpenFilters,
+        favoriteItem = { it.source },
         itemKey = { it.id },
-        filterDefinitions = listOf(
-            CatalogFilterDefinition("nationality", "Национальность") { astronauts ->
-                astronauts.flatMap { astronaut ->
-                    astronaut.nationalityFilterValues.map { CatalogOption(it, it) }
-                }
-            },
-            CatalogFilterDefinition("agency_ids", "Агентство") { astronauts ->
-                astronauts.mapNotNull { astronaut ->
-                    val id = astronaut.agencyId ?: return@mapNotNull null
-                    val name = astronaut.agencyName?.takeIf(String::isNotBlank) ?: return@mapNotNull null
-                    CatalogOption(name, id.toString())
-                }
-            },
-            CatalogFilterDefinition("status_ids", "Статус") { astronauts ->
-                astronauts.mapNotNull { astronaut ->
-                    val id = astronaut.statusId ?: return@mapNotNull null
-                    val name = astronaut.statusName?.takeIf(String::isNotBlank) ?: return@mapNotNull null
-                    CatalogOption(name, id.toString())
-                }
-            },
-        ),
+        filterDefinitions = filterDefinitions,
+        filterOptions = filterOptions,
     ) { astronaut, favorite, toggle ->
         AstronautListItem(astronaut = astronaut, onClick = { onAstronautClick(astronaut.id) }, favorite, toggle)
     }
 }
 
 @Composable
-private fun AstronautListItem(astronaut: Astronaut, onClick: () -> Unit, favorite: Boolean, toggle: () -> Unit) {
-    val initials = astronaut.name.split(" ")
-        .mapNotNull { it.firstOrNull()?.toString() }
-        .takeLast(2)
-        .joinToString("")
-        .ifBlank { "🧑‍🚀" }
-    val agency = astronaut.agencyAbbreviation ?: ""
-    val status = astronaut.statusName ?: ""
-    val subtitle = listOf(agency, status).filter { it.isNotBlank() }.joinToString(" · ").ifBlank { "—" }
-
+private fun AstronautListItem(astronaut: AstronautListItemUiModel, onClick: () -> Unit, favorite: Boolean, toggle: () -> Unit) {
     ListItemCard(
         thumbnailUrl = astronaut.imageUrl,
-        thumbnailFallback = initials,
+        thumbnailFallback = astronaut.thumbnailFallback,
         title = astronaut.name,
-        subtitle = subtitle,
+        subtitle = astronaut.subtitle,
         onClick = onClick,
         isFavorite = favorite,
         onFavoriteClick = toggle,

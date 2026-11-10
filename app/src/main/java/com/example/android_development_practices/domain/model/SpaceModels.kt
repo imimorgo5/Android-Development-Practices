@@ -25,7 +25,7 @@ data class Launch(
     val padLocationName: String?,
     val providerId: Int? = null,
     val statusId: Int? = null,
-)
+) : FavoriteSource
 
 @Serializable
 data class SpaceEvent(
@@ -41,7 +41,7 @@ data class SpaceEvent(
     val duration: String?,
     val launchCount: Int,
     val typeId: Int? = null,
-)
+) : FavoriteSource
 
 @Serializable
 data class Expedition(
@@ -58,7 +58,7 @@ data class Expedition(
     val crewCount: Int,
     val commanderName: String?,
     val stationId: Int? = null,
-)
+) : FavoriteSource
 
 @Serializable
 data class CountryFilterValue(val name: String, val alpha3Code: String)
@@ -79,7 +79,7 @@ data class Agency(
     val website: String?,
     val typeId: Int? = null,
     val countryFilterValues: List<CountryFilterValue> = emptyList(),
-)
+) : FavoriteSource
 
 @Serializable
 data class Astronaut(
@@ -101,4 +101,4 @@ data class Astronaut(
     val nationalityFilterValues: List<String> = emptyList(),
     val agencyId: Int? = null,
     val statusId: Int? = null,
-)
+) : FavoriteSource

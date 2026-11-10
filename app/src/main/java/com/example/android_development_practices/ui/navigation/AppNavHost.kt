@@ -47,10 +47,10 @@ import com.example.android_development_practices.ui.expedition.ExpeditionListRou
 import com.example.android_development_practices.ui.home.HomeRoute
 import com.example.android_development_practices.ui.launch.LaunchDetailRoute
 import com.example.android_development_practices.ui.launch.LaunchListRoute
-import com.example.android_development_practices.data.local.FavoriteEntity
 import com.example.android_development_practices.ui.common.FavoriteViewModel
 import com.example.android_development_practices.ui.common.ListItemCard
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.example.android_development_practices.domain.model.Favorite
 
 private fun BottomTab.icon(): ImageVector = when (this) {
     BottomTab.Home -> Icons.Filled.Home
@@ -231,7 +231,7 @@ private fun idArgument() = listOf(navArgument("id") { type = NavType.StringType 
 
 @Composable
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-private fun FavoritesRoute(onOpen: (FavoriteEntity) -> Unit) {
+private fun FavoritesRoute(onOpen: (Favorite) -> Unit) {
     val vm: FavoriteViewModel = hiltViewModel()
     val items by vm.favorites.collectAsState()
     androidx.compose.material3.Scaffold(topBar = { androidx.compose.material3.TopAppBar(title = { Text("Избранное") }) }) { pad ->

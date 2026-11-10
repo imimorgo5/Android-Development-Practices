@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.domain.model.Agency
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.InfoChip
@@ -44,14 +43,14 @@ fun AgencyDetailRoute(
 
 @Composable
 private fun AgencyDetailScreen(
-    uiState: UiState<Agency>,
+    uiState: UiState<AgencyDetailUiModel>,
     onBack: () -> Unit,
     onRetry: () -> Unit,
 ) {
     ScreenScaffold(title = "Детали агентства", onBack = onBack) { contentModifier ->
         UiStateContent(uiState = uiState, onRetry = onRetry, modifier = contentModifier) { agency ->
             Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-                FavoriteAction(agency)
+                FavoriteAction(agency.source)
                 AgencyDetailContent(agency = agency)
             }
         }
@@ -59,7 +58,7 @@ private fun AgencyDetailScreen(
 }
 
 @Composable
-private fun AgencyDetailContent(agency: Agency) {
+private fun AgencyDetailContent(agency: AgencyDetailUiModel) {
     ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
@@ -76,7 +75,7 @@ private fun AgencyDetailContent(agency: Agency) {
         val fieldsCard = createRef()
 
         DetailHero(
-            emoji = agency.abbreviation ?: "🏛️",
+            emoji = agency.heroFallback,
             imageUrl = agency.imageUrl,
             modifier = Modifier.constrainAs(hero) {
                 top.linkTo(parent.top)
@@ -97,7 +96,7 @@ private fun AgencyDetailContent(agency: Agency) {
         )
 
         InfoChip(
-            text = agency.typeName ?: "Агентство",
+            text = agency.typeChip,
             modifier = Modifier.constrainAs(typeChip) {
                 top.linkTo(title.bottom, margin = 12.dp)
                 centerHorizontallyTo(parent)
@@ -116,12 +115,12 @@ private fun AgencyDetailContent(agency: Agency) {
                 },
         ) {
             StatBox(
-                value = agency.totalLaunchCount?.toString() ?: "—",
+                value = agency.totalLaunchCount,
                 label = "Всего запусков",
                 modifier = Modifier.weight(1f),
             )
             StatBox(
-                value = agency.successfulLaunchCount?.toString() ?: "—",
+                value = agency.successfulLaunchCount,
                 label = "Успешных",
                 modifier = Modifier.weight(1f),
             )
@@ -136,7 +135,7 @@ private fun AgencyDetailContent(agency: Agency) {
         )
 
         Text(
-            text = agency.description ?: "Описание агентства уточняется.",
+            text = agency.description,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.constrainAs(descText) {
@@ -168,9 +167,9 @@ private fun AgencyDetailContent(agency: Agency) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 DetailField(label = "Аббревиатура", value = agency.abbreviation)
                 DetailField(label = "Тип", value = agency.typeName)
-                DetailField(label = "Страны", value = agency.countries.joinToString().takeIf { it.isNotBlank() })
+                DetailField(label = "Страны", value = agency.countries)
                 DetailField(label = "Руководитель", value = agency.administrator)
-                DetailField(label = "Год основания", value = agency.foundingYear?.toString())
+                DetailField(label = "Год основания", value = agency.foundingYear)
                 DetailField(label = "Сайт", value = agency.website)
             }
         }

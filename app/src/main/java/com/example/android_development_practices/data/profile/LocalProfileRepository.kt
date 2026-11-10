@@ -34,12 +34,13 @@ private data class StoredProfile(
     // Preserve the keys of profiles saved by earlier app versions.
     @SerialName("resumeUrl") val portfolioUrl: String = "",
     @SerialName("occupation") val displayName: String = "",
+    val favoriteClassTime: String = "",
 )
 
 @Singleton
 class LocalProfileRepository @Inject constructor(
-    @ApplicationContext private val context: Context,
-    @IoDispatcher private val io: CoroutineDispatcher,
+    @param:ApplicationContext private val context: Context,
+    @param:IoDispatcher private val io: CoroutineDispatcher,
 ) : ProfileRepository {
     private val state = MutableStateFlow<Profile?>(null)
     override val profile = state.filterNotNull()
@@ -58,14 +59,14 @@ class LocalProfileRepository @Inject constructor(
                 if (storage.baseFile.exists()) throw e
                 StoredProfile()
             }
-            Profile(stored.fullName, stored.avatarUri, stored.portfolioUrl, stored.displayName)
+            Profile(stored.fullName, stored.avatarUri, stored.portfolioUrl, stored.displayName, stored.favoriteClassTime)
                 .also { state.value = it }
         }
     }
 
     override suspend fun save(profile: Profile): Unit = withContext(io) {
         mutex.withLock {
-            val stored = StoredProfile(profile.fullName, profile.avatarUri, profile.portfolioUrl, profile.displayName)
+            val stored = StoredProfile(profile.fullName, profile.avatarUri, profile.portfolioUrl, profile.displayName, profile.favoriteClassTime)
             val output = storage.startWrite()
             try {
                 output.write(json.encodeToString(stored).toByteArray(Charsets.UTF_8))

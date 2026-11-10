@@ -4,14 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.example.android_development_practices.domain.model.SpaceEvent
 import com.example.android_development_practices.ui.common.ListItemCard
 import com.example.android_development_practices.ui.common.CatalogOption
-import com.example.android_development_practices.ui.common.upcomingYearOptions
 import com.example.android_development_practices.ui.common.CatalogFilterDefinition
 import com.example.android_development_practices.ui.common.ListScreenScaffold
 import com.example.android_development_practices.ui.common.UiState
-import com.example.android_development_practices.ui.common.formatIsoDate
+import com.example.android_development_practices.domain.model.CatalogSettings
 
 @Composable
 fun EventListRoute(
@@ -20,21 +18,31 @@ fun EventListRoute(
     viewModel: EventListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val settings by viewModel.settings.collectAsState()
+    val filterOptions by viewModel.filterOptions.collectAsState()
     EventListScreen(
         uiState = uiState,
         onBack = onBack,
         onEventClick = onEventClick,
         onRetry = viewModel::retry,
         onFiltersApplied = viewModel::applyFilters,
+        initialSettings = settings,
+        onOpenFilters = viewModel::loadFilterOptions,
+        filterOptions = filterOptions,
+        filterDefinitions = viewModel.filterDefinitions,
     )
 }
 
 @Composable
 private fun EventListScreen(
-    uiState: UiState<List<SpaceEvent>>,
+    uiState: UiState<List<EventListItemUiModel>>,
     onBack: () -> Unit,
     onEventClick: (Int) -> Unit,
     onRetry: () -> Unit,
+    initialSettings: CatalogSettings?,
+    onOpenFilters: () -> Unit,
+    filterOptions: Map<String, List<CatalogOption>>,
+    filterDefinitions: List<CatalogFilterDefinition>,
     onFiltersApplied: (com.example.android_development_practices.ui.common.CatalogFilters) -> Unit,
 ) {
     ListScreenScaffold(
@@ -43,36 +51,24 @@ private fun EventListScreen(
         uiState = uiState,
         onRetry = onRetry,
         onFiltersApplied = onFiltersApplied,
+        initialSettings = initialSettings,
+        onOpenFilters = onOpenFilters,
+        favoriteItem = { it.source },
         itemKey = { it.id },
-        filterDefinitions = listOf(
-            CatalogFilterDefinition("agency__ids", "Агентство") { emptyList() },
-            CatalogFilterDefinition("year", "Год") { events ->
-                upcomingYearOptions(events.mapNotNull { it.date?.take(4)?.takeIf { year -> year.toIntOrNull() != null } })
-            },
-            CatalogFilterDefinition("type__ids", "Тип события") { events ->
-                events.mapNotNull { event ->
-                    val id = event.typeId ?: return@mapNotNull null
-                    val name = event.typeName?.takeIf(String::isNotBlank) ?: return@mapNotNull null
-                    CatalogOption(name, id.toString())
-                }
-            },
-        ),
+        filterDefinitions = filterDefinitions,
+        filterOptions = filterOptions,
     ) { event, favorite, toggle ->
         EventListItem(event = event, onClick = { onEventClick(event.id) }, favorite, toggle)
     }
 }
 
 @Composable
-private fun EventListItem(event: SpaceEvent, onClick: () -> Unit, favorite: Boolean, toggle: () -> Unit) {
-    val tag = event.typeName ?: "Событие"
-    val date = formatIsoDate(event.date, fallback = "дата уточняется")
-    val place = event.location ?: "место не указано"
-
+private fun EventListItem(event: EventListItemUiModel, onClick: () -> Unit, favorite: Boolean, toggle: () -> Unit) {
     ListItemCard(
         thumbnailUrl = event.imageUrl,
-        thumbnailFallback = tag,
+        thumbnailFallback = event.thumbnailFallback,
         title = event.name,
-        subtitle = "$date · $place",
+        subtitle = event.subtitle,
         onClick = onClick,
         isFavorite = favorite,
         onFavoriteClick = toggle,
