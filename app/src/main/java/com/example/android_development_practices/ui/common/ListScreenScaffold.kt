@@ -1,5 +1,6 @@
 package com.example.android_development_practices.ui.common
 
+import com.example.android_development_practices.core.ui.ScreenScaffold
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues

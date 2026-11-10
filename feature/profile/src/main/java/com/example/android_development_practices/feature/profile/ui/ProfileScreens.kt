@@ -1,9 +1,9 @@
-package com.example.android_development_practices.ui.profile
+package com.example.android_development_practices.feature.profile.ui
 
 import android.app.TimePickerDialog
 import android.provider.Settings
-import com.example.android_development_practices.R
-import com.example.android_development_practices.domain.profile.ReminderAccess
+import com.example.android_development_practices.feature.profile.R
+import com.example.android_development_practices.feature.profile.domain.ReminderAccess
 import androidx.compose.ui.res.painterResource
 import android.Manifest
 import android.content.ActivityNotFoundException
@@ -40,8 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil.compose.SubcomposeAsyncImage
-import com.example.android_development_practices.ui.common.AppTextFieldDefaults
-import com.example.android_development_practices.ui.common.ScreenScaffold
+import com.example.android_development_practices.core.ui.AppTextFieldDefaults
+import com.example.android_development_practices.core.ui.ScreenScaffold
 
 @Composable
 fun ProfileRoute(onEdit: () -> Unit, vm: ProfileViewModel = hiltViewModel()) {

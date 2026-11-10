@@ -1,4 +1,4 @@
-package com.example.android_development_practices.data.reminder
+package com.example.android_development_practices.feature.profile.data.reminder
 
 import android.content.BroadcastReceiver
 import android.content.Context

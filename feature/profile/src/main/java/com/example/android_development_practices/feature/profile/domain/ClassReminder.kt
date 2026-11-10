@@ -1,4 +1,4 @@
-package com.example.android_development_practices.domain.profile
+package com.example.android_development_practices.feature.profile.domain
 
 import java.util.Calendar
 import javax.inject.Inject

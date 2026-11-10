@@ -49,30 +49,66 @@ MVVM с разделением на представление, домен и д
 
 Основной сервер ограничивает неаутентифицированные запросы.
 
-```
+## Модули
+
+Проект разделён на три Gradle-модуля:
+
+- `:app` — точка входа, тема, навигация, каталоги и избранное.
+- `:feature:profile` — экраны просмотра и редактирования профиля, ViewModel,
+  UI-модели, доменные модели и сценарии, локальное хранение профиля и фотографий,
+  загрузка портфолио, напоминания и собственный Hilt-модуль.
+- `:core:ui` — общие компоненты `ScreenScaffold` и `AppTextFieldDefaults`.
+
+Зависимости направлены от `app` к `feature:profile` и `core:ui`, а от
+`feature:profile` — только к `core:ui`. Новые модули не зависят от `app`.
+Навигация приложения вызывает `ProfileRoute` и `EditProfileRoute`, передавая
+обработчики переходов. Напоминание получает Intent запуска приложения через
+`PackageManager`, без ссылки на `MainActivity`.
+
+```text
 app/src/main/java/com/example/android_development_practices/
-├── App.kt                  # @HiltAndroidApp
-├── MainActivity.kt         # Single Activity: тема → поверхность → MainApp
+├── App.kt
+├── MainActivity.kt
 ├── data/
-│   ├── local/              # Room: снимки избранного для офлайн-доступа
-│   ├── profile/            # JSON-профиль, приватные фотографии, загрузка документов
-│   ├── model/dto/          # DTO ответов API
-│   ├── mapper/             # преобразование DTO в доменные модели
-│   ├── remote/             # Retrofit-интерфейс Launch Library API
-│   └── repository/         # API-реализация доменного репозитория
+│   ├── local/
+│   ├── model/dto/
+│   ├── mapper/
+│   ├── remote/
+│   └── repository/
 ├── domain/
-│   ├── model/              # модели приложения
-│   ├── repository/         # интерфейс репозитория
-│   ├── profile/            # модель, контракт репозитория, валидация и use cases
-│   └── SpaceUseCases.kt    # сценарии получения данных для UI
-├── di/                     # Retrofit, Hilt и квалификаторы
+├── di/
 └── ui/
-    ├── navigation/         # нижняя навигация и маршруты NavHost
-    ├── common/             # каркасы экранов, карточки списка, UiState, форматтеры
-    ├── home/               # главный экран с категориями
-    ├── profile/            # профиль и редактор, отдельные ViewModel
+    ├── navigation/
+    ├── common/
+    ├── home/
+    ├── theme/
     └── launch|event|expedition|agency|astronaut/
-                            # по паре экранов: список + детали (View + ViewModel)
+
+feature/profile/src/main/
+├── AndroidManifest.xml
+├── java/com/example/android_development_practices/feature/profile/
+│   ├── data/
+│   │   └── reminder/
+│   ├── domain/
+│   ├── di/
+│   └── ui/
+└── res/
+    ├── drawable/ic_class_reminder.xml
+    └── xml/profile_file_paths.xml
+
+core/ui/src/main/java/com/example/android_development_practices/core/ui/
+├── ScreenScaffold.kt
+└── AppTextFieldDefaults.kt
+```
+
+Разрешения профиля, `FileProvider`, `BroadcastReceiver` и ресурсы напоминаний
+принадлежат `feature:profile` и подключаются через слияние манифестов.
+
+Модули можно собрать отдельно:
+
+```bash
+./gradlew :core:ui:assembleDebug :feature:profile:assembleDebug
+./gradlew :app:assembleDebug :app:lintDebug :feature:profile:lintDebug :core:ui:lintDebug
 ```
 
 ## Поиск, фильтры и избранное

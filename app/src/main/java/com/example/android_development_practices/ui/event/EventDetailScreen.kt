@@ -26,7 +26,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.android_development_practices.ui.common.DetailField
 import com.example.android_development_practices.ui.common.DetailHero
 import com.example.android_development_practices.ui.common.InfoChip
-import com.example.android_development_practices.ui.common.ScreenScaffold
+import com.example.android_development_practices.core.ui.ScreenScaffold
 import com.example.android_development_practices.ui.common.SectionTitle
 import com.example.android_development_practices.ui.common.StatBox
 import com.example.android_development_practices.ui.common.UiState
